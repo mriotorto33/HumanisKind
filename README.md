@@ -117,6 +117,35 @@ After signing and anchoring, you receive:
 | `ipfsUrl`   | IPFS URI (e.g. `ipfs://Qm...`)       |
 | `txHash`    | Blockchain transaction hash          |
 
-## License
 
-MIT
+# HumanisKind (HIK) SDK License Agreement (Version 1.0)
+
+**Copyright (c) 2026 Martín Riotorto & Luiza.**
+
+## 1. Overview
+This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
+
+## 2. Permitted Use (Non-Commercial)
+You are permitted to view, download, and use The Software for:
+* Personal, non-commercial projects.
+* Academic research and educational purposes.
+* Evaluation and integration testing (up to 30 days).
+
+## 3. Commercial Use (Requires License)
+Commercial use of The Software is strictly prohibited without a valid, paid subscription. This includes, but is not limited to:
+* Integrating the SDK into a for-profit application or middleware.
+* Using the SDK for internal business e-governance or provenance tracking.
+* Providing paid services based on the HIK Registry.
+
+**To obtain a Commercial License, please subscribe to a plan at: [Your Astra Website URL]**
+
+## 4. Restrictions
+* **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
+* **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Luiza) to maintain the integrity of the Human Provenance standard.
+
+## 5. Termination
+Failure to comply with the terms of this license or failure to maintain a paid subscription for commercial use will result in the immediate termination of your right to use The Software.
+
+---
+
+*“Ensuring AI remains human-centric through transparent, ethical middleware.”*
