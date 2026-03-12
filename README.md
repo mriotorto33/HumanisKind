@@ -120,7 +120,7 @@ After signing and anchoring, you receive:
 
 # HumanisKind (HIK) SDK License Agreement (Version 1.0)
 
-**Copyright (c) 2026 Martín Riotorto & Luiza.**
+**Copyright (c) 2026 Martín Riotorto & Luiza Sadowska.**
 
 ## 1. Overview
 This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
@@ -137,7 +137,7 @@ Commercial use of The Software is strictly prohibited without a valid, paid subs
 * Using the SDK for internal business e-governance or provenance tracking.
 * Providing paid services based on the HIK Registry.
 
-**To obtain a Commercial License, please subscribe to a plan at: [Your Astra Website URL]**
+**To obtain a Commercial License, please subscribe to a plan at: https://www.humaniskind.com**
 
 ## 4. Restrictions
 * **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
