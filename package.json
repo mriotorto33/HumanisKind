@@ -1,0 +1,37 @@
+{
+  "name": "human-is-kind-sdk",
+  "version": "1.0.0",
+  "description": "Blockchain-anchored provenance SDK for C2PA manifests",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "hardhat test",
+    "test:blockchain": "hardhat test tests/test-blockchain-flow.ts",
+    "compile": "hardhat compile",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:amoy": "hardhat run scripts/deploy.ts --network amoy"
+  },
+  "keywords": [
+    "c2pa",
+    "provenance",
+    "blockchain",
+    "ipfs",
+    "human-is-kind"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "ethers": "^6.9.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.10.0",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  }
+}
