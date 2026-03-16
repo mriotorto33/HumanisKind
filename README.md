@@ -34,7 +34,9 @@ npx hardhat compile
 ```bash
 npx hardhat test tests/test-blockchain-flow.ts
 ```
-🧪 Test Without External Services (Mock Mode)
+## 🧪 Test Without External Services (Mock Mode)
+
+```typescript
 const certificate = await signAndAnchor('./my-asset.jpg', {
   useMockIPFS: true,
   blockchain: {
@@ -43,6 +45,8 @@ const certificate = await signAndAnchor('./my-asset.jpg', {
     contractAddress: 'YOUR_DEPLOYED_ADDRESS'
   }
 });
+---
+
 ## CLI Commands
 
 ### Deploy Locally (with running node)
