@@ -45,7 +45,7 @@ const certificate = await signAndAnchor('./my-asset.jpg', {
     contractAddress: 'YOUR_DEPLOYED_ADDRESS'
   }
 });
----
+```
 
 ## CLI Commands
 
