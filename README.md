@@ -1,4 +1,4 @@
-# Human Is Kind (HIK) SDK
+# Human Is Kind (HIK)
 
 Blockchain-anchored provenance for C2PA manifests. Sign assets locally, store manifests on IPFS, and anchor hashes to a smart contract for permanent verification.
 # SDK 🛡️
