@@ -42,8 +42,9 @@ const certificate = await signAndAnchor('./my-asset.jpg', {
   blockchain: {
     rpcUrl: 'http://localhost:8545',
     privateKey: 'your-test-key',
-    contractAddress: 'YOUR_DEPLOYED_ADDRESS'
-  }
+    contractAddress: 'YOUR_DEPLOYED_ADDRESS',
+  },
+  storage: {}, // required by TypeScript but unused in mock mode
 });
 ```
 
@@ -106,6 +107,8 @@ const certificate = await signAndAnchor("/path/to/asset.jpg", {
   storage: {
     pinataApiKey: process.env.PINATA_API_KEY,
     pinataSecretKey: process.env.PINATA_SECRET_KEY,
+    // Optional: increase timeout (ms) when pinning can be slow.
+    timeoutMs: 120_000,
   },
 });
 
@@ -116,6 +119,18 @@ const verification = await verifyAsset(
   { rpcUrl, contractAddress },
   certificate.manifestHash
 );
+```
+
+## 🔎 See the Certificate Object (Example Script)
+
+A small helper script is included to run the full flow and print the certificate to your console.
+
+```bash
+# Start a local node in one terminal:
+#   npx hardhat node
+
+# Run the helper (uses mock IPFS):
+npx hardhat run scripts/show-certificate.ts --network localhost
 ```
 
 ## HIK Certificate

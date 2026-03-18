@@ -9,6 +9,11 @@ export interface StorageConfig {
   pinataApiKey?: string;
   pinataSecretKey?: string;
   ipfsGateway?: string;
+  /**
+   * Timeout for IPFS requests in milliseconds.
+   * Defaults to 120s (120000) to allow for slower networks.
+   */
+  timeoutMs?: number;
 }
 
 const DEFAULT_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
@@ -23,7 +28,7 @@ export async function uploadToIPFS(
   manifest: object,
   config: StorageConfig
 ): Promise<string> {
-  const { pinataApiKey, pinataSecretKey } = config;
+  const { pinataApiKey, pinataSecretKey, timeoutMs } = config;
 
   if (!pinataApiKey || !pinataSecretKey) {
     throw new Error(
@@ -31,6 +36,7 @@ export async function uploadToIPFS(
     );
   }
 
+  const timeout = timeoutMs ?? 120_000;
   const json = JSON.stringify(manifest);
   const blob = new Blob([json], { type: "application/json" });
   const formData = new FormData();
@@ -46,6 +52,7 @@ export async function uploadToIPFS(
         pinata_secret_api_key: pinataSecretKey,
       },
       maxBodyLength: Infinity,
+      timeout,
     }
   );
 
@@ -63,6 +70,7 @@ export async function uploadToLocalIPFS(
 ): Promise<string> {
   const json = JSON.stringify(manifest);
 
+  const timeout = _config?.timeoutMs ?? 120_000;
   const response = await axios.post(
     "http://127.0.0.1:5001/api/v0/add",
     json,
@@ -70,6 +78,7 @@ export async function uploadToLocalIPFS(
       headers: { "Content-Type": "application/json" },
       params: { "cid-version": 1 },
       transformRequest: [(data) => data],
+      timeout,
     }
   );
 

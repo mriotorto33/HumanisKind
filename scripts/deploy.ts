@@ -1,7 +1,14 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
+  const signers = await ethers.getSigners();
+  if (signers.length === 0) {
+    throw new Error(
+      "No signers available. Ensure you are connected to a network with unlocked accounts (e.g. run `npx hardhat node`) or set PRIVATE_KEY in .env."
+    );
+  }
+
+  const deployer = signers[0];
   console.log("Deploying HIKRegistry with account:", deployer.address);
 
   const HIKRegistry = await ethers.getContractFactory("HIKRegistry");
