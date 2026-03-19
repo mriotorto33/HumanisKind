@@ -1,32 +1,48 @@
 import hre from "hardhat";
-import { signAndAnchor } from "../src/index";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 async function main() {
-  // Deploy a fresh registry for this run (so we don't need env vars).
-  const HIKRegistry = await hre.ethers.getContractFactory("HIKRegistry");
-  const registry = await HIKRegistry.deploy();
-  await registry.waitForDeployment();
-  const contractAddress = await registry.getAddress();
+  const { ethers } = hre;
 
-  // Use the same default Hardhat test mnemonic as the suite does.
-  const wallet = hre.ethers.Wallet.fromPhrase(
-    "test test test test test test test test test test test junk"
+  const contractAddress = process.env.HIK_REGISTRY_ADDRESS;
+  const manifestHash = process.env.HIK_LAST_HASH;
+
+  if (!contractAddress) {
+    throw new Error("Missing HIK_REGISTRY_ADDRESS in .env");
+  }
+
+  if (!manifestHash) {
+    throw new Error("Missing HIK_LAST_HASH in .env");
+  }
+
+  console.log("🔗 Contract:", contractAddress);
+  console.log("🔍 Hash:", manifestHash);
+
+  const registry = await ethers.getContractAt(
+    "HIKRegistry",
+    contractAddress
   );
 
-  const certificate = await signAndAnchor("./assets/test.jpg", {
-    useMockIPFS: true,
-    blockchain: {
-      rpcUrl: "http://localhost:8545",
-      privateKey: wallet.privateKey.replace("0x", ""),
-      contractAddress,
-    },
-    storage: {},
-  });
+  // 👇 SIEMPRE chequear antes
+  const exists = await registry.isRegistered(manifestHash);
 
-  console.log("HIK Certificate:", certificate);
+  if (!exists) {
+    console.log("❌ Asset NOT registered");
+    return;
+  }
+
+  const asset = await registry.getAsset(manifestHash);
+
+  console.log("\n📄 CERTIFICATE");
+  console.log("----------------------------");
+  console.log("Creator:   ", asset.creator);
+  console.log("Timestamp: ", asset.timestamp.toString());
+  console.log("IPFS URI:  ", asset.ipfsUri);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
+main().catch((error) => {
+  console.error("❌ Error:", error);
+  process.exitCode = 1;
 });

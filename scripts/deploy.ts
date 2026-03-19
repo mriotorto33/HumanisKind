@@ -1,28 +1,20 @@
-import { ethers, network } from "hardhat";
+import hre from "hardhat";
 import * as dotenv from "dotenv";
 import { uploadToIPFS } from "../src/storage";
 
 dotenv.config();
 
 async function main() {
-  const signers = await ethers.getSigners();
+  const { ethers, network } = hre;
 
-  if (signers.length === 0) {
-    throw new Error(
-      "No signers available. Run `npx hardhat node` or set PRIVATE_KEY in .env"
-    );
-  }
+  const [deployer] = await ethers.getSigners();
 
-  const deployer = signers[0];
-  console.log("Deploying HIKRegistry with account:", deployer.address);
+  console.log("Deploying with:", deployer.address);
   console.log("Network:", network.name);
 
-  // Toggle between mock IPFS and real Pinata upload
-  const USE_REAL_IPFS = process.env.USE_PINATA === "true";
-
-  let cid: string;
-
-  // Manifest payload (this will be uploaded to IPFS)
+  // ----------------------------------------
+  // 1. CREATE MANIFEST
+  // ----------------------------------------
   const manifest = {
     name: "HIK Proof",
     description: "Human Is Kind registry entry",
@@ -30,50 +22,74 @@ async function main() {
     version: "1.0",
   };
 
-  if (USE_REAL_IPFS) {
-    console.log("Uploading manifest to Pinata (IPFS)...");
-
-    if (!process.env.PINATA_API_KEY || !process.env.PINATA_SECRET_KEY) {
-      throw new Error(
-        "Missing PINATA_API_KEY or PINATA_SECRET_KEY in .env"
-      );
-    }
-
-    // Upload to IPFS via Pinata
-    cid = await uploadToIPFS(manifest, {
-      pinataApiKey: process.env.PINATA_API_KEY,
-      pinataSecretKey: process.env.PINATA_SECRET_KEY,
-    });
-
-    console.log("IPFS upload successful. CID:", cid);
-  } else {
-    // Local development fallback
-    console.log("Using mock IPFS CID (local development mode)");
-    cid = "ipfs://mockCID";
+  // ----------------------------------------
+  // 2. UPLOAD TO REAL IPFS (NO MOCK)
+  // ----------------------------------------
+  if (!process.env.PINATA_API_KEY || !process.env.PINATA_SECRET_KEY) {
+    throw new Error("Missing Pinata credentials in .env");
   }
 
-  // Get contract factory
+  console.log("\n📤 Uploading to IPFS...");
+
+  const cid = await uploadToIPFS(manifest, {
+    pinataApiKey: process.env.PINATA_API_KEY,
+    pinataSecretKey: process.env.PINATA_SECRET_KEY,
+  });
+
+  console.log("✅ IPFS CID:", cid);
+
+  const gatewayUrl = cid.replace(
+    "ipfs://",
+    "https://gateway.pinata.cloud/ipfs/"
+  );
+
+  console.log("🌍 View:", gatewayUrl);
+
+  // ----------------------------------------
+  // 3. DEPLOY CONTRACT
+  // ----------------------------------------
   const HIKRegistry = await ethers.getContractFactory("HIKRegistry");
 
-  // IMPORTANT:
-  // Contract must accept CID in constructor:
-  // constructor(string memory _baseURI)
-  console.log("Deploying contract with baseURI:", cid);
+  console.log("\n🚀 Deploying contract...");
+  const registry = await HIKRegistry.deploy();
 
-  const registry = await HIKRegistry.deploy(cid);
   await registry.waitForDeployment();
-
   const address = await registry.getAddress();
 
-  console.log("\nDeployment successful");
-  console.log("Contract address:", address);
-  console.log("Base URI (CID):", cid);
+  console.log("✅ Contract:", address);
 
-  console.log("\nAdd to your .env:");
+  // ----------------------------------------
+  // 4. REGISTER ASSET
+  // ----------------------------------------
+  const manifestHash = ethers.keccak256(
+    ethers.toUtf8Bytes(JSON.stringify(manifest))
+  );
+
+  console.log("\n📝 Registering asset...");
+
+  const tx = await registry.registerAsset(manifestHash, cid);
+  await tx.wait();
+
+  console.log("✅ Registered");
+
+  // ----------------------------------------
+  // 5. OUTPUT EVERYTHING CLEAN
+  // ----------------------------------------
+  console.log("\n==============================");
+  console.log("📄 CERTIFICATE READY");
+  console.log("==============================");
+
+  console.log("Contract:", address);
+  console.log("Hash:", manifestHash);
+  console.log("CID:", cid);
+  console.log("URL:", gatewayUrl);
+
+  console.log("\n👉 Save in .env:");
   console.log(`HIK_REGISTRY_ADDRESS=${address}`);
+  console.log(`HIK_LAST_HASH=${manifestHash}`);
 }
 
 main().catch((error) => {
-  console.error("Deployment failed:", error);
+  console.error("❌ Deployment failed:", error);
   process.exitCode = 1;
 });
