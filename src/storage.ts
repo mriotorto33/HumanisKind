@@ -18,6 +18,18 @@ export interface StorageConfig {
 
 const DEFAULT_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
+interface PinataResponse {
+  IpfsHash: string;
+  Name?: string;
+  Size?: number;
+}
+
+interface LocalIPFSResponse {
+  Hash: string;
+  Name?: string;
+  Size?: number;
+}
+
 /**
  * Uploads manifest JSON to IPFS using Pinata API.
  * @param manifest - Manifest object (will be JSON-stringified)
@@ -42,22 +54,23 @@ export async function uploadToIPFS(
   const formData = new FormData();
   formData.append("file", blob, "manifest.json");
 
-  const response = await axios.post(
+  const axiosConfig = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      pinata_api_key: pinataApiKey,
+      pinata_secret_api_key: pinataSecretKey,
+    },
+    maxBodyLength: Infinity,
+    timeout,
+  } as const;
+
+  const response = await axios.post<PinataResponse>(
     "https://api.pinata.cloud/pinning/pinFileToIPFS",
     formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        pinata_api_key: pinataApiKey,
-        pinata_secret_api_key: pinataSecretKey,
-      },
-      maxBodyLength: Infinity,
-      timeout,
-    }
+    axiosConfig
   );
 
-  const cid = response.data.IpfsHash;
-  return `ipfs://${cid}`;
+  return `ipfs://${response.data.IpfsHash}`;
 }
 
 /**
@@ -66,24 +79,25 @@ export async function uploadToIPFS(
  */
 export async function uploadToLocalIPFS(
   manifest: object,
-  _config?: StorageConfig
+  config?: StorageConfig
 ): Promise<string> {
   const json = JSON.stringify(manifest);
+  const timeout = config?.timeoutMs ?? 120_000;
 
-  const timeout = _config?.timeoutMs ?? 120_000;
-  const response = await axios.post(
+  const axiosConfig = {
+    headers: { "Content-Type": "application/json" },
+    params: { "cid-version": 1 },
+    transformRequest: [(data: any) => data] as unknown as [(data: LocalIPFSResponse) => any],
+    timeout,
+  } as const;
+
+  const response = await axios.post<LocalIPFSResponse>(
     "http://127.0.0.1:5001/api/v0/add",
     json,
-    {
-      headers: { "Content-Type": "application/json" },
-      params: { "cid-version": 1 },
-      transformRequest: [(data) => data],
-      timeout,
-    }
+    axiosConfig
   );
 
-  const cid = response.data.Hash;
-  return `ipfs://${cid}`;
+  return `ipfs://${response.data.Hash}`;
 }
 
 /**
@@ -105,8 +119,6 @@ export async function fetchFromIPFS(
   const cid = ipfsUri.replace("ipfs://", "");
   const url = `${gateway.replace(/\/$/, "")}/${cid}`;
 
-  const response = await axios.get(url);
-  return typeof response.data === "string"
-    ? JSON.parse(response.data)
-    : response.data;
+  const response = await axios.get<object>(url);
+  return typeof response.data === "string" ? JSON.parse(response.data) : response.data;
 }

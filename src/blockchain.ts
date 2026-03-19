@@ -1,92 +1,66 @@
-/**
- * HIK Blockchain Module
- * Interacts with HIKRegistry smart contract for immutable manifest anchoring.
- */
-
 import { ethers, Contract, Wallet, Provider } from "ethers";
+import { normalizeHash } from "./utils";
 
 export interface BlockchainConfig {
   rpcUrl?: string;
-  /** Optional: use this provider instead of creating from rpcUrl (e.g. Hardhat ethers.provider) */
-  provider?: ethers.Provider;
-  privateKey: string;
+  provider?: Provider;
+  privateKey?: string;
   contractAddress: string;
 }
 
-const HIK_REGISTRY_ABI = [
-  "function registerAsset(bytes32 manifestHash, string memory ipfsUri) external",
-  "function getAsset(bytes32 manifestHash) external view returns (address creator, uint256 timestamp, string memory ipfsUri)",
-  "function isRegistered(bytes32 manifestHash) external view returns (bool)",
-  "event AssetRegistered(bytes32 indexed manifestHash, address indexed creator, string ipfsUri, uint256 timestamp)",
+const ABI = [
+  "function registerAsset(bytes32 manifestHash, string ipfsUri)",
+  "function getAsset(bytes32 manifestHash) view returns (address creator, uint256 timestamp, string ipfsUri)",
+  "function isRegistered(bytes32 manifestHash) view returns (bool)",
 ];
 
-/**
- * Creates an ethers provider from RPC URL.
- * Supports Infura, Alchemy, or any JSON-RPC endpoint.
- */
-export function createProvider(rpcUrl: string): Provider {
-  return new ethers.JsonRpcProvider(rpcUrl);
+function getProvider(config: BlockchainConfig): Provider {
+  if (config.provider) return config.provider;
+  if (!config.rpcUrl) throw new Error("Missing rpcUrl or provider");
+  return new ethers.JsonRpcProvider(config.rpcUrl);
 }
 
-/**
- * Creates a wallet from private key for transaction signing.
- */
-export function createWallet(privateKey: string, provider?: Provider): Wallet {
-  return provider
-    ? new ethers.Wallet(privateKey, provider)
-    : new ethers.Wallet(privateKey);
+function getContract(config: BlockchainConfig, signerOrProvider: any): Contract {
+  return new ethers.Contract(config.contractAddress, ABI, signerOrProvider);
 }
 
-/**
- * Gets the HIKRegistry contract instance.
- */
-export function getHIKRegistryContract(
-  address: string,
-  signerOrProvider: Wallet | Provider
-): Contract {
-  return new ethers.Contract(address, HIK_REGISTRY_ABI, signerOrProvider);
-}
-
-/**
- * Anchors a manifest hash and IPFS URI to the blockchain.
- * @returns Transaction hash
- */
 export async function registerAsset(
   config: BlockchainConfig,
   manifestHash: string,
   ipfsUri: string
 ): Promise<string> {
-  const provider = config.provider ?? createProvider(config.rpcUrl!);
-  const wallet = createWallet(config.privateKey, provider);
-  const contract = getHIKRegistryContract(config.contractAddress, wallet);
+  if (!config.privateKey) throw new Error("Missing privateKey");
 
-  const hashBytes32 = manifestHash.startsWith("0x") ? manifestHash : `0x${manifestHash}`;
-  const tx = await contract.registerAsset(hashBytes32, ipfsUri);
+  const provider = getProvider(config);
+  const wallet = new Wallet(config.privateKey, provider);
+  const contract = getContract(config, wallet);
+
+  const tx = await contract.registerAsset(
+    normalizeHash(manifestHash),
+    ipfsUri
+  );
+
   const receipt = await tx.wait();
-
   return receipt?.hash ?? tx.hash;
 }
 
-/**
- * Verifies that a manifest hash is registered on-chain.
- */
 export async function verifyAsset(
-  config: Pick<BlockchainConfig, "rpcUrl" | "provider" | "contractAddress">,
+  config: BlockchainConfig,
   manifestHash: string
-): Promise<{ creator: string; timestamp: bigint; ipfsUrl: string } | null> {
-  const provider = config.provider ?? createProvider(config.rpcUrl!);
-  const contract = getHIKRegistryContract(config.contractAddress, provider);
+) {
+  const provider = getProvider(config);
+  const contract = getContract(config, provider);
 
-  const hashBytes32 = manifestHash.startsWith("0x") ? manifestHash : `0x${manifestHash}`;
-  const isReg = await contract.isRegistered(hashBytes32);
+  const hash = normalizeHash(manifestHash);
 
-  if (!isReg) return null;
+  const exists = await contract.isRegistered(hash);
+  if (!exists) return null;
 
-  const result = await contract.getAsset(hashBytes32);
-  const ipfsUri = result[2] ?? result.ipfsUri ?? "";
+  const { creator, timestamp, ipfsUri } = await contract.getAsset(hash);
+
   return {
-    creator: result[0] ?? result.creator,
-    timestamp: result[1] ?? result.timestamp,
+    creator,
+    timestamp,
     ipfsUrl: ipfsUri,
   };
 }
