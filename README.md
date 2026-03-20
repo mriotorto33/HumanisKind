@@ -17,7 +17,7 @@ The deterministic heart of the SDK, guaranteeing civilizational source integrity
 
 ### 2. The Sequential Truth Engine (v2.0)
 Evolving the protocol beyond localized static files directly into hyper-scale, low-latency live video streaming.
-* **Verifiable Segment Info (VSI)**: Real-time **C2PA v2.3 compliant** fMP4/HLS video fragment signing. Generates an unbreakable video-chain by mathematically locking the cryptographic state of the *previous* fragment directly into the *current* fragment.
+* **Verifiable Segment Info (VSI)**: Real-time **C2PA v2.3 compliant** fMP4/HLS video fragment signing. The SDK mathematically maps the `vsi_hash_map` assertions directly into ISO BMFF `emsg` (Event Message) binary boxes. This rigidly locks the cryptographic state of the *previous* media fragment into the *current* payload, outputting an unbreakable Merkle video-chain.
 * **CMCDv2 Ethical Pulse**: Dynamically broadcasts real-time integrity telemetry headers directly to the open web:
   - `CMCD-Custom-hik-es` (Ethical Score: 0-100): Calculates live KMIR adherence. A score of 100 means the stream is mathematically pure. If upstream logic drops the score by even 1 point (e.g., detecting an unauthorized deepfake), zero-trust components drop the stream.
   - `CMCD-Custom-hik-ps` (Provenance Score: 0-∞): A live tally of the **Merkle Chain Depth**. A `hik-ps` of 5,200 mathematically guarantees there is an unbreakable, cryptographically verified chain of 5,200 consecutive video frames leading flawlessly back to the root physical camera anchor.

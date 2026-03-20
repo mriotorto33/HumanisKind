@@ -20,7 +20,7 @@ export interface VSIMapHash {
 }
 
 export interface C2PAEmsgAssertion {
-  vsio_map_hash: VSIMapHash;
+  vsi_hash_map: VSIMapHash;
   previous_link_hash: string; // The unbreakable Merkle Chain link
   timestamp: string;
 }
@@ -41,18 +41,18 @@ export class StreamSigner {
 
   /**
    * Processes a live video/audio fragment in ultra-low latency.
-   * Calculates the vsio-map-hash and builds the C2PA assertion required for the emsg box.
+   * Calculates the vsi-map-hash and builds the C2PA assertion required for the emsg box.
    * 
    * @param fragment The raw fMP4 media chunk buffer and sequence
    * @returns The raw ISO BMFF `emsg` box buffer containing the C2PA assertion
    */
   public generateEmsgBox(fragment: StreamFragment): Buffer {
-    // 1. Calculate the vsio-map-hash for the target media segment
+    // 1. Calculate the vsi-hash-map for the target media segment
     const segmentHash = "0x" + createHash("sha256").update(fragment.payloadBuffer).digest("hex");
 
     // 2. Build the C2PA v2.3 compliant sequential assertion
     const assertion: C2PAEmsgAssertion = {
-      vsio_map_hash: {
+      vsi_hash_map: {
         segment_id: fragment.sequenceNumber,
         hash_algorithm: "sha256",
         hash_value: segmentHash
@@ -79,7 +79,7 @@ export class StreamSigner {
     // - scheme_id_uri: urn:c2pa:vsi
     // - value: fragment sequence metadata
     // - message_data: the C2PA assertion payload
-    
+
     // For SDK purposes, we wrap the buffer to simulate the binary injection
     const emsgHeader = Buffer.from("emsg::urn:c2pa:vsi::", "utf8");
     return Buffer.concat([emsgHeader, payload]);
