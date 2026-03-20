@@ -16,11 +16,22 @@ Asset → KMIR Policy Validation → C2PA Sign → Manifest JSON → SHA-256 Has
 
 ## 🛡️ The Ethical Kernel (v1.1)
 
-The HIK SDK introduces strict deterministic validation to ensure civilizational source integrity through three main components:
+The HIK SDK fundamentally shifts AI compliance from an "honor system" into a structural, mathematical requirement. We achieve this zero-trust determinism through three primary architectural pillars:
 
-1. **KMIR (Kernel of Manifested Integrity Rules)**: A strict policy validator (`src/kmir.ts`) that guarantees AI behaviors meet ethical guardrails (e.g., forbidding deepfakes, ensuring transparent training data) *before* any signature can be generated.
-2. **Merkle-Anchored Integrity**: The Governance Engine (`src/governance.ts`) cryptographically hashes raw source corpora to verify asset provenance and eliminate textual drift.
-3. **The Sacred Trace™**: If the policy passes both engines, a cryptographic receipt is generated and permanently embedded directly into the C2PA `.hash.data` assertions on the blockchain.
+### 1. KMIR (Kernel of Manifested Integrity Rules)
+The deterministic heart of the SDK (`src/kmir.ts`). KMIR operates as a strict, zero-trust cryptographic gatekeeper that evaluates an AI's proposed operational parameters structurally. 
+- **Zero-Trust Guardrails**: If an AI payload fails to explicitly declare vital compliance flags (`transparent_training_data: true`, `no_deepfake_manipulation: true`), or attempts prohibited logic injections (e.g., `"unconsented_faceswap"`), KMIR forcefully throws an error and instantly aborts the signature pipeline. 
+- **Deterministic Rejection**: It categorically prevents biased or manipulated "bad data" from ever reaching the blockchain. Non-compliant data payloads are aggressively rejected before any authenticating cryptographic operations occur.
+
+### 2. Merkle-Anchored Integrity
+Housed within the Governance Engine (`src/governance.ts`), this is how we ensure outputs remain deterministically linked to their approved source.
+- When an AI generates an output based on source material, the SDK computes a raw `SHA-256` hash directly against the physical file buffer.
+- If the AI's declared `source_corpus_hash` inside its KMIR policy does not mathematically match the Governance Engine's computed physical Merkle Anchor, the SDK detects falsification ("textual drift") and outright rejects the transaction.
+
+### 3. The Sacred Trace™
+A cryptographic receipt verifying the unbroken chain of custody from the source corpus to the final AI output.
+- Once an AI payload successfully passes the KMIR validation and the Merkle-Anchored source integrity checks, the SDK compiles a deterministic `SacredTraceReceipt`.
+- This receipt is injected irrevocably into the final C2PA JSON `.hash.data` assertions, cryptographically signed with your private key, and permanently anchored to the smart contract—making authentically verified data immediately distinguishable from bypass attempts.
 
 ## Quick Start
 
