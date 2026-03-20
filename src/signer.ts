@@ -11,6 +11,8 @@ import type { BlockchainConfig } from "./blockchain";
 import { registerAsset as anchorToBlockchain } from "./blockchain";
 import type { StorageConfig } from "./storage";
 import { uploadToIPFS, uploadToLocalIPFS, uploadToMockIPFS } from "./storage";
+import { KMIRValidator, PolicyManifest, SacredTraceReceipt } from "./kmir";
+import { GovernanceEngine, AgentRulesOfEngagement } from "./governance";
 
 // ─────────────────────────────────────────────
 // 🔐 Safe deterministic JSON stringify
@@ -202,27 +204,38 @@ export interface SignerConfig {
   signingKey?: C2PASigningKey;
   useLocalIPFS?: boolean;
   useMockIPFS?: boolean;
+  kmirPolicy?: PolicyManifest;
+  agentRules?: AgentRulesOfEngagement;
 }
 
 // ─────────────────────────────────────────────
 // 🎯 Create manifest
 // ─────────────────────────────────────────────
-function createManifest(assetPath: string, assetHash: string): object {
+function createManifest(assetPath: string, assetHash: string, sacredTrace?: SacredTraceReceipt): object {
   const now = new Date().toISOString();
+  const assertions: any[] = [
+    {
+      label: "c2pa.actions.v1",
+      data: {
+        actions: [
+          { action: "c2pa.created", when: now, software_agent: "HumanIsKind-SDK" },
+        ],
+      },
+    },
+    { label: "c2pa.hash.data", data: { alg: "sha256", value: assetHash } },
+  ];
+
+  if (sacredTrace) {
+    assertions.push({
+      label: "human-is-kind.kmir.v1",
+      data: sacredTrace
+    });
+  }
+
   return {
     claim_generator: "HumanIsKind/1.0",
     created_at: now,
-    assertions: [
-      {
-        label: "c2pa.actions.v1",
-        data: {
-          actions: [
-            { action: "c2pa.created", when: now, software_agent: "HumanIsKind-SDK" },
-          ],
-        },
-      },
-      { label: "c2pa.hash.data", data: { alg: "sha256", value: assetHash } },
-    ],
+    assertions,
     asset_ref: assetPath,
   };
 }
@@ -238,10 +251,25 @@ export async function signAndAnchor(
     throw new Error("Missing privateKey in blockchain config");
   }
 
-  const signingKey = config.signingKey ?? loadOrCreateSigningKey();
+  const governance = new GovernanceEngine();
+  if (config.agentRules) {
+    governance.certifyAgentEngagement(config.agentRules);
+  }
 
+  const signingKey = config.signingKey ?? loadOrCreateSigningKey();
   const assetHash = hashAssetFile(assetPath);
-  const manifest = createManifest(assetPath, assetHash);
+
+  let sacredTrace: SacredTraceReceipt | undefined;
+  if (config.kmirPolicy) {
+    const merkleAnchor = governance.generateMerkleAnchor(assetPath);
+    if (config.kmirPolicy.source_corpus_hash !== merkleAnchor && config.kmirPolicy.source_corpus_hash !== assetHash) {
+       throw new Error("Governance Violation: Policy manifest source hash does not match computed Merkle Anchor.");
+    }
+    const kmir = new KMIRValidator();
+    sacredTrace = kmir.generateSacredTrace(config.kmirPolicy);
+  }
+
+  const manifest = createManifest(assetPath, assetHash, sacredTrace);
   const manifestHash = hashManifest(manifest);
   const signature = await signManifest(signingKey, manifest);
 
