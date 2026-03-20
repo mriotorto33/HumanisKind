@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const assetPath = path.join(process.cwd(), "public", "demo-image.jpg");
     if (!fs.existsSync(assetPath)) fs.writeFileSync(assetPath, "AI Generated Image Data...");
 
-    const actualHash = hashAssetFile(assetPath);
+    const actualHash = "0x" + hashAssetFile(assetPath);
 
     // Read Pinata keys from the environment or fallback to the provided demo keys
     const pinataApiKey = process.env.PINATA_API_KEY || "af3c785db618cf47c992";
