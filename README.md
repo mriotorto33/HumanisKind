@@ -11,8 +11,16 @@ Blockchain-anchored provenance for C2PA manifests. Sign assets locally, store ma
 ## Architecture
 
 ```
-Asset → C2PA Sign → Manifest JSON → SHA-256 Hash → IPFS Pin → Blockchain Anchor
+Asset → KMIR Policy Validation → C2PA Sign → Manifest JSON → SHA-256 Hash → IPFS Pin → Blockchain Anchor
 ```
+
+## 🛡️ The Ethical Kernel (v1.1)
+
+The HIK SDK introduces strict deterministic validation to ensure civilizational source integrity through three main components:
+
+1. **KMIR (Kernel of Manifested Integrity Rules)**: A strict policy validator (`src/kmir.ts`) that guarantees AI behaviors meet ethical guardrails (e.g., forbidding deepfakes, ensuring transparent training data) *before* any signature can be generated.
+2. **Merkle-Anchored Integrity**: The Governance Engine (`src/governance.ts`) cryptographically hashes raw source corpora to verify asset provenance and eliminate textual drift.
+3. **The Sacred Trace™**: If the policy passes both engines, a cryptographic receipt is generated and permanently embedded directly into the C2PA `.hash.data` assertions on the blockchain.
 
 ## Quick Start
 
