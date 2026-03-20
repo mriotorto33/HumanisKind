@@ -89,10 +89,14 @@ HumanisKind/
 ├── contracts/
 │   └── HIKRegistry.sol      # Smart contract for manifest anchoring
 ├── src/
+│   ├── kmir.ts              # Kernel of Manifested Integrity Rules
+│   ├── governance.ts        # Merkle-Anchored Integrity & Rules of Engagement
 │   ├── blockchain.ts        # ethers.js interaction with HIKRegistry
 │   ├── storage.ts           # IPFS upload (Pinata / local node)
 │   ├── signer.ts            # Full flow: Sign → Hash → Upload → Anchor
 │   └── index.ts             # SDK exports
+├── examples/
+│   └── nextjs-boilerplate/  # Fullstack Next.js Integration Template
 ├── scripts/
 │   ├── demo.ts              # Deployment & E2E SDK Demo script
 │   └── show-certificate.ts  # Reads a certificate from the blockchain
@@ -106,9 +110,12 @@ HumanisKind/
 ## Usage
 
 ```typescript
-import { signAndAnchor, verifyAsset } from "human-is-kind-sdk";
+import { signAndAnchor, verifyAsset, hashAssetFile } from "human-is-kind-sdk";
 
-const certificate = await signAndAnchor("/path/to/asset.jpg", {
+const assetPath = "/path/to/asset.jpg";
+const actualHash = hashAssetFile(assetPath);
+
+const certificate = await signAndAnchor(assetPath, {
   blockchain: {
     rpcUrl: process.env.RPC_URL!,
     privateKey: process.env.PRIVATE_KEY!,
@@ -120,6 +127,25 @@ const certificate = await signAndAnchor("/path/to/asset.jpg", {
     // Optional: increase timeout (ms) when pinning can be slow.
     timeoutMs: 120_000,
   },
+  kmirPolicy: {
+    ai_agent_id: "humaniskind-compliance-agent",
+    source_corpus_hash: actualHash,
+    allowed_transformations: [],
+    guardrails: {
+      no_deepfake_manipulation: true,
+      transparent_training_data: true,
+      human_in_the_loop: true
+    }
+  },
+  agentRules: {
+    agent_id: "humaniskind-compliance-agent",
+    vendor: "HumanIsKind",
+    compliance_flags: {
+      allows_synthetic_derivatives: false,
+      requires_human_verification: true,
+      respects_opt_out_crawling: true
+    }
+  }
 });
 
 console.log(certificate);
