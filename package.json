@@ -11,8 +11,9 @@
     "compile": "hardhat compile",
     "node": "hardhat node",
     "demo:local": "hardhat run scripts/demo.ts --network localhost",
-    "demo:amoy": "hardhat run scripts/demo.ts --network amoy",
-    "show-certificate:local": "hardhat run scripts/show-certificate.ts --network localhost"
+    "demo:amoy": "ts-node scripts/demo.ts --network amoy",
+    "show-certificate:local": "ts-node scripts/show-certificate.ts --network localhost",
+    "test:v2": "ts-node tests/test-v2-telemetry.ts"
   },
   "keywords": [
     "c2pa",
