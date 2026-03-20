@@ -1,6 +1,11 @@
-import { createHash, createSign, generateKeyPairSync } from "crypto";
-import { readFileSync, existsSync } from "fs";
-import { keccak256, toUtf8Bytes, Wallet } from "ethers";
+import {
+  createHash,
+  createSign,
+  createVerify,
+  generateKeyPairSync,
+} from "crypto";
+import { readFileSync, existsSync, writeFileSync } from "fs";
+import { keccak256, toUtf8Bytes } from "ethers";
 import stringify from "json-stable-stringify";
 import type { BlockchainConfig } from "./blockchain";
 import { registerAsset as anchorToBlockchain } from "./blockchain";
@@ -17,7 +22,7 @@ function safeStringify(obj: object): string {
 }
 
 // ─────────────────────────────────────────────
-// 📁 Hash actual file contents
+// 📁 Hash actual file contents (not path string)
 // ─────────────────────────────────────────────
 export function hashAssetFile(assetPath: string): string {
   if (!existsSync(assetPath)) {
@@ -28,7 +33,7 @@ export function hashAssetFile(assetPath: string): string {
 }
 
 // ─────────────────────────────────────────────
-// 🔒 Deterministic manifest hash (keccak256 for on-chain)
+// 🔒 Deterministic manifest hash
 // ─────────────────────────────────────────────
 export function hashManifest(manifest: object): string {
   const stable = safeStringify(manifest);
@@ -44,7 +49,34 @@ export interface C2PASigningKey {
 }
 
 // ─────────────────────────────────────────────
-// ✍️ Sign manifest (ES256 / COSE_Sign1 compliant)
+// 💾 Persistent key loader / generator
+// ─────────────────────────────────────────────
+export function loadOrCreateSigningKey(
+  privateKeyPath = "./hik-signing.key.pem",
+  publicKeyPath = "./hik-signing.pub.pem"
+): C2PASigningKey {
+  const privPath = process.env.HIK_PRIVATE_KEY_PATH ?? privateKeyPath;
+  const pubPath = process.env.HIK_PUBLIC_KEY_PATH ?? publicKeyPath;
+
+  if (existsSync(privPath) && existsSync(pubPath)) {
+    return {
+      privateKeyPem: readFileSync(privPath, "utf8"),
+      publicKeyPem: readFileSync(pubPath, "utf8"),
+    };
+  }
+
+  console.log("🔑 No signing key found — generating new P-256 key pair...");
+  const pair = generateC2PAKeyPair();
+  writeFileSync(privPath, pair.privateKeyPem, { mode: 0o600 });
+  writeFileSync(pubPath, pair.publicKeyPem);
+  console.log(`✅ Keys saved:\n   private → ${privPath}\n   public  → ${pubPath}`);
+  console.log("   Add HIK_PRIVATE_KEY_PATH and HIK_PUBLIC_KEY_PATH to your .env");
+
+  return pair;
+}
+
+// ─────────────────────────────────────────────
+// ✍️ Sign manifest (ES256 / C2PA COSE_Sign1)
 // ─────────────────────────────────────────────
 export async function signManifest(
   signingKey: C2PASigningKey,
@@ -65,13 +97,77 @@ export async function signManifest(
     payloadBytes,
   ]);
 
- const sign = createSign("SHA256");
-sign.update(sigStructure); // feed data
+  const sign = createSign("SHA256");
+  sign.update(sigStructure);
+  sign.end();
+  const derSignature = sign.sign(signingKey.privateKeyPem);
 
-const derSignature = sign.sign(signingKey.privateKeyPem);
-
-  // base64url encoding for C2PA
   return derSignature.toString("base64url");
+}
+
+// ─────────────────────────────────────────────
+// 🔍 Offline certificate verification
+// ─────────────────────────────────────────────
+export interface VerifyResult {
+  signatureValid: boolean;
+  assetIntact: boolean | null;
+  manifestHash: string;
+  signer: string;
+  error?: string;
+}
+
+export function verifySignature(
+  certificate: HIKCertificate,
+  assetPath?: string
+): VerifyResult {
+  try {
+    const stable = safeStringify(certificate.manifest);
+    const payloadBytes = Buffer.from(stable, "utf8");
+    const protectedHeader = safeStringify({
+      alg: "ES256",
+      cty: "application/c2pa",
+      claim_generator: "HumanIsKind/1.0",
+    });
+
+    const sigStructure = Buffer.concat([
+      Buffer.from(protectedHeader, "utf8"),
+      Buffer.from("."),
+      payloadBytes,
+    ]);
+
+    const verify = createVerify("SHA256");
+    verify.update(sigStructure);
+    verify.end();
+    const signatureValid = verify.verify(
+      certificate.publicKeyPem,
+      Buffer.from(certificate.signature, "base64url")
+    );
+
+    let assetIntact: boolean | null = null;
+    if (assetPath) {
+      assetIntact = hashAssetFile(assetPath) === certificate.assetHash;
+    }
+
+    const fingerprint = createHash("sha256")
+      .update(certificate.publicKeyPem)
+      .digest("hex")
+      .slice(0, 20);
+
+    return {
+      signatureValid,
+      assetIntact,
+      manifestHash: certificate.manifestHash,
+      signer: `hik:${fingerprint}`,
+    };
+  } catch (err) {
+    return {
+      signatureValid: false,
+      assetIntact: null,
+      manifestHash: certificate.manifestHash ?? "unknown",
+      signer: "unknown",
+      error: (err as Error).message,
+    };
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -83,19 +179,16 @@ export function generateC2PAKeyPair(): C2PASigningKey {
     publicKeyEncoding: { type: "spki", format: "pem" },
     privateKeyEncoding: { type: "pkcs8", format: "pem" },
   });
-
-  return {
-    privateKeyPem: privateKey,
-    publicKeyPem: publicKey,
-  };
+  return { privateKeyPem: privateKey, publicKeyPem: publicKey };
 }
 
 // ─────────────────────────────────────────────
-// 🏷️ HIK certificate interface
+// 🏷️ HIK Certificate
 // ─────────────────────────────────────────────
 export interface HIKCertificate {
   localPath: string;
   assetHash: string;
+  manifest: object;
   manifestHash: string;
   ipfsUrl: string;
   txHash: string;
@@ -123,7 +216,9 @@ function createManifest(assetPath: string, assetHash: string): object {
       {
         label: "c2pa.actions.v1",
         data: {
-          actions: [{ action: "c2pa.created", when: now, software_agent: "HumanIsKind-SDK" }],
+          actions: [
+            { action: "c2pa.created", when: now, software_agent: "HumanIsKind-SDK" },
+          ],
         },
       },
       { label: "c2pa.hash.data", data: { alg: "sha256", value: assetHash } },
@@ -139,9 +234,11 @@ export async function signAndAnchor(
   assetPath: string,
   config: SignerConfig
 ): Promise<HIKCertificate> {
-  if (!config.blockchain.privateKey) throw new Error("Missing privateKey in blockchain config");
+  if (!config.blockchain.privateKey) {
+    throw new Error("Missing privateKey in blockchain config");
+  }
 
-  const signingKey = config.signingKey ?? generateC2PAKeyPair();
+  const signingKey = config.signingKey ?? loadOrCreateSigningKey();
 
   const assetHash = hashAssetFile(assetPath);
   const manifest = createManifest(assetPath, assetHash);
@@ -149,23 +246,18 @@ export async function signAndAnchor(
   const signature = await signManifest(signingKey, manifest);
 
   const payload = { ...manifest, signature, publicKey: signingKey.publicKeyPem };
+
   let ipfsUrl: string;
-
-  try {
-    if (config.useMockIPFS) ipfsUrl = await uploadToMockIPFS(payload, manifestHash);
-    else if (config.useLocalIPFS) ipfsUrl = await uploadToLocalIPFS(payload);
-    else ipfsUrl = await uploadToIPFS(payload, config.storage);
-
-    if (!ipfsUrl) throw new Error("IPFS upload returned empty URL");
-  } catch (err) {
-    throw new Error(`IPFS upload failed: ${(err as Error).message}`);
-  }
+  if (config.useMockIPFS) ipfsUrl = await uploadToMockIPFS(payload, manifestHash);
+  else if (config.useLocalIPFS) ipfsUrl = await uploadToLocalIPFS(payload);
+  else ipfsUrl = await uploadToIPFS(payload, config.storage);
 
   const txHash = await anchorToBlockchain(config.blockchain, manifestHash, ipfsUrl);
 
   return {
     localPath: assetPath,
     assetHash,
+    manifest,
     manifestHash,
     ipfsUrl,
     txHash,
