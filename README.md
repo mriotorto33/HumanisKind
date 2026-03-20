@@ -56,27 +56,30 @@ const certificate = await signAndAnchor('./my-asset.jpg', {
 
 ## CLI Commands
 
-### Deploy Locally (with running node)
+### Deploy & Demo Locally (with running node)
 
 ```bash
 # Terminal 1: Start local Hardhat node
 npx hardhat node
 
-# Terminal 2: Deploy contract
-npx hardhat run scripts/deploy.ts --network localhost
+# Terminal 2: Run the full SDK E2E demo (Deploys registry & registers a mock asset)
+npm run demo:local
+
+# Terminal 2 (Optional): View the certificate on the registry
+npm run show-certificate:local
 ```
 
 ### Deploy to Polygon Amoy (Testnet)
 
 ```bash
 # Ensure .env has PRIVATE_KEY and optionally POLYGON_RPC_URL
-npx hardhat run scripts/deploy.ts --network amoy
+npm run demo:amoy
 ```
 
 ### Deploy to Polygon Mainnet
 
 ```bash
-npx hardhat run scripts/deploy.ts --network polygon
+npx hardhat run scripts/demo.ts --network polygon
 ```
 
 ## Project Structure
@@ -91,7 +94,8 @@ HumanisKind/
 │   ├── signer.ts            # Full flow: Sign → Hash → Upload → Anchor
 │   └── index.ts             # SDK exports
 ├── scripts/
-│   └── deploy.ts            # Deployment script
+│   ├── demo.ts              # Deployment & E2E SDK Demo script
+│   └── show-certificate.ts  # Reads a certificate from the blockchain
 ├── tests/
 │   └── test-blockchain-flow.ts  # E2E: Sign → Upload → Anchor → Verify
 ├── hardhat.config.ts
@@ -129,14 +133,11 @@ const verification = await verifyAsset(
 
 ## 🔎 See the Certificate Object (Example Script)
 
-A small helper script is included to run the full flow and print the certificate to your console.
+A small helper script is included to read your most recently anchored certificate directly from the blockchain and print it to your console.
 
 ```bash
-# Start a local node in one terminal:
-#   npx hardhat node
-
-# Run the helper (uses mock IPFS):
-npx hardhat run scripts/show-certificate.ts --network localhost
+# Look up the certificate saved in your .env
+npm run show-certificate:local
 ```
 
 ## HIK Certificate

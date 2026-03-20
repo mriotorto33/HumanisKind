@@ -10,8 +10,9 @@
     "test:blockchain": "hardhat test tests/test-blockchain-flow.ts",
     "compile": "hardhat compile",
     "node": "hardhat node",
-    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
-    "deploy:amoy": "hardhat run scripts/deploy.ts --network amoy"
+    "demo:local": "hardhat run scripts/demo.ts --network localhost",
+    "demo:amoy": "hardhat run scripts/demo.ts --network amoy",
+    "show-certificate:local": "hardhat run scripts/show-certificate.ts --network localhost"
   },
   "keywords": [
     "c2pa",
