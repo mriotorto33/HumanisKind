@@ -7,3 +7,4 @@ typechain-types/
 cache/
 artifacts/
 *.log
+*.tgz
