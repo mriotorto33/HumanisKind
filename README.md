@@ -82,6 +82,17 @@ npm run demo:amoy
 npx hardhat run scripts/demo.ts --network polygon
 ```
 
+## 🚀 Next.js Fullstack Boilerplate
+
+A complete, zero-config Next.js App Router template is included. It securely demonstrates integrating the **Governance Engine** and **KMIR Validator** rules directly into a scalable frontend and backend API.
+
+```bash
+cd examples/nextjs-boilerplate
+npm install     # Install frontend dependencies
+npm run dev     # Start the local development server
+```
+Once running, simply browse to **http://localhost:3000** to test the secure KMIR integrations.
+
 ## Project Structure
 
 ```
