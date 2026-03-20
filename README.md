@@ -33,6 +33,15 @@ A cryptographic receipt verifying the unbroken chain of custody from the source 
 - Once an AI payload successfully passes the KMIR validation and the Merkle-Anchored source integrity checks, the SDK compiles a deterministic `SacredTraceReceipt`.
 - This receipt is injected irrevocably into the final C2PA JSON `.hash.data` assertions, cryptographically signed with your private key, and permanently anchored to the smart contract—making authentically verified data immediately distinguishable from bypass attempts.
 
+### 🌐 Real-World Example: Preventing Deepfakes in Live Broadcasts
+Consider a news network transmitting live satellite video feeds. Without Human Is Kind, a malicious actor (or compromised vendor software) could intercept the feed, apply a real-time AI synthetic face-swap, and broadcast the manipulated propaganda to millions before anyone notices.
+
+With the HIK SDK integrated directly into the broadcasting pipeline:
+1. **The Root Hash**: The physical camera generates a **Merkle Anchor** for every 5-second video chunk and cryptographically signs it.
+2. **Explicit Consent**: Any AI middleware touching the feed (e.g., color correction, real-time closed captioning) MUST submit a payload to the SDK's **KMIRValidator** explicitly declaring `no_deepfake_manipulation: true`.
+3. **The Trap**: If a malicious deepfake model attempts to alter the feed, it faces a structural paradox. It either refuses to sign the explicit KMIR declaration (which auto-crashes the stream before it airs), or it *chooses to lie* by declaring `no_deepfake_manipulation: true`.
+4. **Instant Revocation**: Because the AI was forced to lie, **The Sacred Trace** permanently binds the deepfake frames to the malicious Agent's ID and physical signature on the blockchain. Verifiers instantly detect the anomaly, drop the broadcast in milliseconds, and the network permanently burns the compromised vendor's cryptographic keys—eradicating their ability to operate civilizational infrastructure ever again.
+
 ## Quick Start
 
 ### 1. Install Dependencies
