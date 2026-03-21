@@ -5,7 +5,8 @@
  * C2PA v2 compliant real-time fragment signing for fMP4 and HLS/DASH streams.
  */
 
-import { createHash } from "crypto";
+import { createHash, createSign } from "crypto";
+import { type C2PASigningKey, loadOrCreateSigningKey } from "./signer";
 
 export interface StreamFragment {
   sequenceNumber: number;
@@ -23,20 +24,24 @@ export interface C2PAEmsgAssertion {
   vsi_hash_map: VSIMapHash;
   previous_link_hash: string; // The unbreakable Merkle Chain link
   timestamp: string;
+  signature?: string;
+  certificate_pem?: string;
 }
 
 export class StreamSigner {
   private currentChainTip: string;
+  private signingKey: C2PASigningKey;
 
   /**
    * Initializes a real-time stream signer.
    * @param initialAnchorHash The Governance Merkle Anchor of the broadcast starting state.
    */
-  constructor(initialAnchorHash: string) {
+  constructor(initialAnchorHash: string, signingKey?: C2PASigningKey) {
     if (!initialAnchorHash || !initialAnchorHash.startsWith("0x")) {
       throw new Error("VSI Error: A valid 0x Merkle Anchor is required to start the chain.");
     }
     this.currentChainTip = initialAnchorHash;
+    this.signingKey = signingKey ?? loadOrCreateSigningKey();
   }
 
   /**
@@ -61,12 +66,20 @@ export class StreamSigner {
       timestamp: fragment.timestamp || new Date().toISOString()
     };
 
-    // 3. Seal the mathematical link into the new chain tip
+    // 3. Cryptographically sign the assertion for Adobe Validator compat
+    const assertionStringForSign = JSON.stringify(assertion);
+    const sign = createSign("SHA256");
+    sign.update(Buffer.from(assertionStringForSign, "utf8"));
+    sign.end();
+    assertion.signature = sign.sign(this.signingKey.privateKeyPem).toString("base64url");
+    assertion.certificate_pem = this.signingKey.publicKeyPem;
+
+    // 4. Seal the mathematical link into the new chain tip
     const assertionString = JSON.stringify(assertion);
     const linkBuffer = Buffer.from(assertionString, "utf8");
     this.currentChainTip = "0x" + createHash("sha256").update(linkBuffer).digest("hex");
 
-    // 4. Pack the assertion into the ISO BMFF `emsg` (Event Message) box
+    // 5. Pack the assertion into the ISO BMFF `emsg` (Event Message) box
     return this.packIntoEmsgBox(linkBuffer);
   }
 
