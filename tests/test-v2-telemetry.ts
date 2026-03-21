@@ -94,6 +94,17 @@ async function runV2Tests() {
   }
   console.log(`✅ Unverified/Spoofed Ad Fragments mathematically blocked by Edge Signature Validation.`);
 
+  // Test Node.js / HTTP/2 lowercase header behavior
+  const lowercasedSecureHeaders: Record<string, string> = {};
+  for (const [k, v] of Object.entries(secureHeaders)) {
+    lowercasedSecureHeaders[k.toLowerCase()] = v;
+  }
+  
+  if (!secureTelemetry.evaluateEdgeRequest(lowercasedSecureHeaders)) {
+    throw new Error("Telemetry Test Failed [FALSE POSITIVE]: Edge CDN blocked valid signed telemetry because the HTTP proxy lowercased the headers!");
+  }
+  console.log(`✅ Case-insensitive Edge Signature Validation correctly allowed lowercased HTTP headers.`);
+
   // Tolerance Window State (Tolerating missing pulse)
   const tolerantTelemetry = new CMCDTelemetryHandler({ maxToleranceWindow: 2 });
   if (!tolerantTelemetry.evaluateEdgeRequest(bypassHeaders)) {

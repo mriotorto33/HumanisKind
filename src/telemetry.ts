@@ -68,13 +68,19 @@ export class CMCDTelemetryHandler {
       headers["CMCD-Custom-hik-ab"] = "1";
     }
 
-    // Secure the headers cryptographically if a signing key is configured
+    // Secure the headers cryptographically if a signing key is configured.
+    // IMPORTANT: We sign a payload built from lowercased header keys so that the
+    // verifier works correctly regardless of whether an HTTP/2 proxy has lowercased
+    // the keys in transit. This makes the signature transport-layer agnostic.
     if (this.signingKey) {
-      // Deterministic JSON stringification of headers for repeatable payload signatures
-      const keys = Object.keys(headers).sort();
+      const lowercasedHeaders: Record<string, string> = {};
+      for (const [k, v] of Object.entries(headers)) {
+        lowercasedHeaders[k.toLowerCase()] = v;
+      }
+      const sortedKeys = Object.keys(lowercasedHeaders).sort();
       const payloadObj: Record<string, string> = {};
-      for (const k of keys) {
-        payloadObj[k] = headers[k];
+      for (const k of sortedKeys) {
+        payloadObj[k] = lowercasedHeaders[k];
       }
       
       const payloadString = JSON.stringify(payloadObj);
@@ -107,35 +113,22 @@ export class CMCDTelemetryHandler {
     const abKey = normalizedHeaders["cmcd-custom-hik-ab"];
     const sigKey = normalizedHeaders["cmcd-custom-hik-sig"];
 
-    // 1. If the Edge expects a cryptographic signature, rigidly verify it before ANY trust decisions
+    // 1. If the Edge expects a cryptographic signature, rigidly verify it before ANY trust decisions.
     if (this.verificationKeyPem) {
       if (!sigKey && (esKey || abKey)) {
         // Missing signature on claimed telemetry is an automatic deepfake failure
         return false;
       }
       if (sigKey) {
-        // Reconstruct the exact header object to verify the payload signature
-        const payloadObj: Record<string, string> = {};
-        for (const [k, v] of Object.entries(normalizedHeaders)) {
-          if (k.startsWith("cmcd-custom-hik-") && k !== "cmcd-custom-hik-sig") {
-            // Note: the sender used original casing (e.g. "CMCD-Custom-hik-es"),
-            // so if normalization breaks the signature hash, it would fail.
-            // We must find the original keys from the *unnormalized* headers to correctly verify.
-          }
-        }
-        
-        // Accurate reconstruction using original headers
-        const originalHIKHeaders: Record<string, string> = {};
-        for (const [k, v] of Object.entries(headers)) {
-          if (k.toLowerCase().startsWith("cmcd-custom-hik-") && k.toLowerCase() !== "cmcd-custom-hik-sig") {
-             originalHIKHeaders[k] = v;
-          }
-        }
-        
-        const keys = Object.keys(originalHIKHeaders).sort();
+        // Reconstruct the payload using lowercased, sorted HIK header keys.
+        // This mirrors exactly what generateHeaders signs, so the verification
+        // succeeds whether or not an HTTP/2 proxy lowercased the keys in transit.
         const verifyPayload: Record<string, string> = {};
-        for (const k of keys) {
-          verifyPayload[k] = originalHIKHeaders[k];
+        const sortedHikKeys = Object.keys(normalizedHeaders)
+          .filter(k => k.startsWith("cmcd-custom-hik-") && k !== "cmcd-custom-hik-sig")
+          .sort();
+        for (const k of sortedHikKeys) {
+          verifyPayload[k] = normalizedHeaders[k];
         }
 
         const verify = createVerify("SHA256");
