@@ -124,7 +124,7 @@ npx hardhat run scripts/demo.ts --network polygon
 ---
 
 ## ⚖️ License Agreement (Version 1.0)
-**Copyright (c) 2026 Martín Riotorto & Luiza Sadowska.**
+**Copyright (c) 2026 Martín Riotorto & Luiza Sadowska & Federico Brubacher.**
 
 This Software is provided as **"Visible Source"** exclusively for transparency in human provenance and AI auditing.
 
