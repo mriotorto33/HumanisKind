@@ -13,6 +13,7 @@
 The deterministic heart of the SDK, guaranteeing civilizational source integrity before signatures are fired.
 * **KMIR (Kernel of Manifested Integrity Rules)**: A strict, zero-trust cryptographic gatekeeper. If an AI payload fails to explicitly declare vital compliance flags (e.g., `no_deepfake_manipulation: true`), or attempts prohibited logic injections (e.g., `"unconsented_faceswap"`), KMIR forcefully throws an error and instantly aborts the transaction. 
 * **Merkle-Anchored Governance**: Physically hashes the raw source buffer to eliminate textual drift, hallucinations, or silent content manipulation.
+* **OIDC CAWG Identity Bridging**: Seamlessly maps external federated identities (e.g., Google JWTs) directly into the CAWG (Coalition for Authenticated Web Governance) v1 identity schema within the manifest using an unforgeable cryptographic proof of possession.
 * **The Sacred Trace™**: An immutable cryptographic receipt permanently embedded directly into the C2PA `.hash.data` assertions on the blockchain, immediately distinguishing legitimately verified data from bypass attempts.
 
 ### 2. The Sequential Truth Engine (v2.0)

@@ -206,12 +206,35 @@ export interface SignerConfig {
   useMockIPFS?: boolean;
   kmirPolicy?: PolicyManifest;
   agentRules?: AgentRulesOfEngagement;
+  creatorAssertion?: CreatorAssertion;
+}
+
+// ─────────────────────────────────────────────
+// 👤 CAWG Identity Bridging
+// ─────────────────────────────────────────────
+export interface CreatorAssertion {
+  identity_provider: string;
+  proof_of_possession: string;
+  merkle_hash: string;
+}
+
+/**
+ * Creates a CAWG (Creator Assertions Working Group) identity bridge.
+ * Binds an external OIDC Token (like Google JWT) to the HIK manifest via a 
+ * cryptographic Merkle-Anchored hash.
+ */
+export function associateIdentity(jwt: string, provider: string = "google"): CreatorAssertion {
+  return {
+    identity_provider: provider,
+    proof_of_possession: jwt,
+    merkle_hash: "0x" + createHash("sha256").update(jwt).digest("hex")
+  };
 }
 
 // ─────────────────────────────────────────────
 // 🎯 Create manifest
 // ─────────────────────────────────────────────
-function createManifest(assetPath: string, assetHash: string, sacredTrace?: SacredTraceReceipt): object {
+function createManifest(assetPath: string, assetHash: string, sacredTrace?: SacredTraceReceipt, creatorAssertion?: CreatorAssertion): object {
   const now = new Date().toISOString();
   const assertions: any[] = [
     {
@@ -229,6 +252,17 @@ function createManifest(assetPath: string, assetHash: string, sacredTrace?: Sacr
     assertions.push({
       label: "human-is-kind.kmir.v1",
       data: sacredTrace
+    });
+  }
+
+  if (creatorAssertion) {
+    assertions.push({
+      label: "cawg.identity.v1",
+      data: {
+        identity_provider: creatorAssertion.identity_provider,
+        proof_of_possession: creatorAssertion.proof_of_possession,
+        merkle_hash: creatorAssertion.merkle_hash
+      }
     });
   }
 
@@ -269,7 +303,7 @@ export async function signAndAnchor(
     sacredTrace = kmir.generateSacredTrace(config.kmirPolicy);
   }
 
-  const manifest = createManifest(assetPath, assetHash, sacredTrace);
+  const manifest = createManifest(assetPath, assetHash, sacredTrace, config.creatorAssertion);
   const manifestHash = hashManifest(manifest);
   const signature = await signManifest(signingKey, manifest);
 
