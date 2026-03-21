@@ -2,7 +2,7 @@
 
 In a world saturated with "infinite copies" and automated code, a **Manifesto** is the only thing that cannot be cloned. It is the **Intellectual Moat** that protects your vision, your speed, and your personal "Trace."
 
-For a solo founder, the `Manifesto.md` serves as your **Sovereign Declaration**.
+For a solo founder, the `Manifesto.md` serves as my **Sovereign Declaration**.
 
 ---
 
