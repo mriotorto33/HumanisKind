@@ -41,10 +41,18 @@ export class CMCDTelemetryHandler {
     // Deep chains inherently possess higher cryptographic weight.
     const hikPs = config.chainDepth;
 
-    return {
+    const headers: Record<string, string> = {
       "CMCD-Custom-hik-es": hikEs.toString(),
       "CMCD-Custom-hik-ps": hikPs.toString()
     };
+
+    // hik-tw: Tolerance Window
+    // Dynamically informs the Edge CDN of the broadcaster's explicit network packet drop tolerance.
+    if (this.maxToleranceWindow > 0) {
+      headers["CMCD-Custom-hik-tw"] = this.maxToleranceWindow.toString();
+    }
+
+    return headers;
   }
 
   /**

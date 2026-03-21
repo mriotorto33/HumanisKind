@@ -21,13 +21,17 @@ class EdgeTelemetryHandler {
     // In edge environments, track stream state via client IP or similar stream identifier
     const clientKey = request.headers.get("cf-connecting-ip") || "unknown";
     
-    const esKey = headers["cmcd-custom-hik-es"] || headers["CMCD-Custom-hik-es"];
+    const esKey = headers["cmcd-custom-hik-es"];
+    const twKey = headers["cmcd-custom-hik-tw"];
+    
+    // Use dynamically injected tolerance from the broadcaster, or fallback to the edge default
+    const currentTolerance = twKey ? parseInt(twKey, 10) : this.maxToleranceWindow;
     
     if (!esKey) {
       const currentMissing = (this.consecutiveMissingPulses.get(clientKey) || 0) + 1;
       this.consecutiveMissingPulses.set(clientKey, currentMissing);
       
-      if (currentMissing <= this.maxToleranceWindow) {
+      if (currentMissing <= currentTolerance) {
         return true; // Tolerate missing pulse
       }
       return false; // Zero-trust failure
