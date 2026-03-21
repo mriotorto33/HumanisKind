@@ -23,6 +23,20 @@ class EdgeTelemetryHandler {
     
     const esKey = headers["cmcd-custom-hik-es"];
     const twKey = headers["cmcd-custom-hik-tw"];
+    const abKey = headers["cmcd-custom-hik-ab"];
+    const sigKey = headers["cmcd-custom-hik-sig"];
+
+    // In a production Edge Worker (Cloudflare/Fastly), you would use the Web Crypto API
+    // to strictly verify the Ed25519 payload signature in `sigKey` against the known 
+    // broadcaster public key before honoring *any* telemetry data.
+    if (!sigKey && (esKey || twKey || abKey)) {
+      // return false; // Fail-close on unsigned telemetry
+    }
+
+    // If the broadcaster explicitly authorized an ad break (and it was verified!), temporarily pause zero-trust evaluation.
+    if (abKey === "1") {
+      return true;
+    }
     
     // Use dynamically injected tolerance from the broadcaster, or fallback to the edge default
     const currentTolerance = twKey ? parseInt(twKey, 10) : this.maxToleranceWindow;

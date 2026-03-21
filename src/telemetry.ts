@@ -6,21 +6,31 @@
  * (hik-es, hik-ps) onto edge media segments.
  */
 
+import { createSign, createVerify } from "crypto";
+import { type C2PASigningKey, loadOrCreateSigningKey } from "./signer";
+
 export interface EthicalPulseConfig {
   kmirCompliancePercentage: number; // 0 to 100
   chainDepth: number; // How many sequential fMP4 fragments have been successfully chained
+  isAdBreakActive?: boolean; // Signal authorized chain sleep during ads
 }
 
 export interface EdgeTelemetryConfig {
   maxToleranceWindow?: number; // Number of consecutive missing pulses to tolerate
+  signingKey?: C2PASigningKey; // Broadcaster private key to sign telemetry
+  verificationKeyPem?: string; // Edge CDN public key to physically verify telemetry
 }
 
 export class CMCDTelemetryHandler {
   private consecutiveMissingPulses = 0;
   private maxToleranceWindow: number;
+  private signingKey?: C2PASigningKey;
+  private verificationKeyPem?: string;
 
   constructor(config?: EdgeTelemetryConfig) {
     this.maxToleranceWindow = config?.maxToleranceWindow || 0;
+    this.signingKey = config?.signingKey;
+    this.verificationKeyPem = config?.verificationKeyPem;
   }
 
   /**
@@ -52,6 +62,29 @@ export class CMCDTelemetryHandler {
       headers["CMCD-Custom-hik-tw"] = this.maxToleranceWindow.toString();
     }
 
+    // hik-ab: Ad Break active
+    // Instructs the zero-trust edge to temporarily sleep to allow unverified third-party ad insertions
+    if (config.isAdBreakActive) {
+      headers["CMCD-Custom-hik-ab"] = "1";
+    }
+
+    // Secure the headers cryptographically if a signing key is configured
+    if (this.signingKey) {
+      // Deterministic JSON stringification of headers for repeatable payload signatures
+      const keys = Object.keys(headers).sort();
+      const payloadObj: Record<string, string> = {};
+      for (const k of keys) {
+        payloadObj[k] = headers[k];
+      }
+      
+      const payloadString = JSON.stringify(payloadObj);
+      const sign = createSign("SHA256");
+      sign.update(Buffer.from(payloadString, "utf8"));
+      sign.end();
+      
+      headers["CMCD-Custom-hik-sig"] = sign.sign(this.signingKey.privateKeyPem).toString("base64url");
+    }
+
     return headers;
   }
 
@@ -71,6 +104,57 @@ export class CMCDTelemetryHandler {
     }
 
     const esKey = normalizedHeaders["cmcd-custom-hik-es"];
+    const abKey = normalizedHeaders["cmcd-custom-hik-ab"];
+    const sigKey = normalizedHeaders["cmcd-custom-hik-sig"];
+
+    // 1. If the Edge expects a cryptographic signature, rigidly verify it before ANY trust decisions
+    if (this.verificationKeyPem) {
+      if (!sigKey && (esKey || abKey)) {
+        // Missing signature on claimed telemetry is an automatic deepfake failure
+        return false;
+      }
+      if (sigKey) {
+        // Reconstruct the exact header object to verify the payload signature
+        const payloadObj: Record<string, string> = {};
+        for (const [k, v] of Object.entries(normalizedHeaders)) {
+          if (k.startsWith("cmcd-custom-hik-") && k !== "cmcd-custom-hik-sig") {
+            // Note: the sender used original casing (e.g. "CMCD-Custom-hik-es"),
+            // so if normalization breaks the signature hash, it would fail.
+            // We must find the original keys from the *unnormalized* headers to correctly verify.
+          }
+        }
+        
+        // Accurate reconstruction using original headers
+        const originalHIKHeaders: Record<string, string> = {};
+        for (const [k, v] of Object.entries(headers)) {
+          if (k.toLowerCase().startsWith("cmcd-custom-hik-") && k.toLowerCase() !== "cmcd-custom-hik-sig") {
+             originalHIKHeaders[k] = v;
+          }
+        }
+        
+        const keys = Object.keys(originalHIKHeaders).sort();
+        const verifyPayload: Record<string, string> = {};
+        for (const k of keys) {
+          verifyPayload[k] = originalHIKHeaders[k];
+        }
+
+        const verify = createVerify("SHA256");
+        verify.update(Buffer.from(JSON.stringify(verifyPayload), "utf8"));
+        verify.end();
+
+        const isValid = verify.verify(this.verificationKeyPem, Buffer.from(sigKey, "base64url"));
+        if (!isValid) {
+          // The headers were tampered with (e.g., someone spoofed an ad-break or inflated their ethical score)
+          return false;
+        }
+      }
+    }
+
+    if (abKey === "1") {
+      // Authorized Chain Sleep: The broadcaster explicitly signed an ad break.
+      // Allow unverified fragments to pass the Edge without counting against tolerance.
+      return true;
+    }
     
     if (!esKey) {
       // Network drop or missing pulse: Use the tolerance window

@@ -12,6 +12,7 @@ export interface StreamFragment {
   sequenceNumber: number;
   payloadBuffer: Buffer;
   timestamp?: string;
+  adBreakAction?: "start" | "end";
 }
 
 export interface VSIMapHash {
@@ -24,6 +25,7 @@ export interface C2PAEmsgAssertion {
   vsi_hash_map: VSIMapHash;
   previous_link_hash: string; // The unbreakable Merkle Chain link
   timestamp: string;
+  stream_status?: string;
   signature?: string;
   certificate_pem?: string;
 }
@@ -65,6 +67,10 @@ export class StreamSigner {
       previous_link_hash: this.currentChainTip,
       timestamp: fragment.timestamp || new Date().toISOString()
     };
+
+    if (fragment.adBreakAction) {
+      assertion.stream_status = `ad_break_${fragment.adBreakAction}`;
+    }
 
     // 3. Cryptographically sign the assertion for Adobe Validator compat
     const assertionStringForSign = JSON.stringify(assertion);

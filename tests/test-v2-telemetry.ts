@@ -58,6 +58,42 @@ async function runV2Tests() {
   }
   console.log(`✅ Bypass Request (No Ethical Pulse) correctly dropped at the Edge.`);
 
+  // Authorized Ad Break (Explicitly pausing zero-trust checks for Server-Side Ad Insertion)
+  console.log("--- 3. Testing SSAI Authorized Ad Breaks & Cryptographic Signatures ---");
+  
+  // Create a securely signed telemetry handler
+  const { loadOrCreateSigningKey } = require("../src/signer");
+  const secureKey = loadOrCreateSigningKey();
+  
+  const secureTelemetry = new CMCDTelemetryHandler({ 
+    signingKey: secureKey,
+    verificationKeyPem: secureKey.publicKeyPem
+  });
+
+  const adBreakState = { kmirCompliancePercentage: 100, chainDepth: 5, isAdBreakActive: true };
+  const secureHeaders = secureTelemetry.generateHeaders(adBreakState);
+  
+  console.log(`[+] Broadcast Headers (Ad Break + Signature):`, secureHeaders);
+  
+  if (!secureTelemetry.evaluateEdgeRequest(secureHeaders)) {
+    throw new Error("Telemetry Test Failed: Authorized Ad Break flag was not respected when properly signed.");
+  }
+  
+  // Simulate a deepfaker spoofing an Ad Break without a valid signature
+  const spoofedAdFragmentHeaders = { "CMCD-Custom-hik-ab": "1", "CMCD-Custom-hik-es": "100" };
+  if (secureTelemetry.evaluateEdgeRequest(spoofedAdFragmentHeaders)) {
+    throw new Error("Telemetry Test Failed: Edge CDN allowed a spoofed ad fragment without a signature!");
+  }
+  
+  const badlySignedSpoof = { 
+    ...spoofedAdFragmentHeaders, 
+    "CMCD-Custom-hik-sig": "fake_signature_base64_string" 
+  };
+  if (secureTelemetry.evaluateEdgeRequest(badlySignedSpoof)) {
+    throw new Error("Telemetry Test Failed: Edge CDN allowed a spoofed ad fragment with an invalid signature!");
+  }
+  console.log(`✅ Unverified/Spoofed Ad Fragments mathematically blocked by Edge Signature Validation.`);
+
   // Tolerance Window State (Tolerating missing pulse)
   const tolerantTelemetry = new CMCDTelemetryHandler({ maxToleranceWindow: 2 });
   if (!tolerantTelemetry.evaluateEdgeRequest(bypassHeaders)) {
