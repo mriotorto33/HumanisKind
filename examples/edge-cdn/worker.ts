@@ -10,10 +10,32 @@
 
 // Mocking the handler implementation structure for this edge template:
 class EdgeTelemetryHandler {
-  public evaluateEdgeRequest(headers: Record<string, string>, minCompliance = 100): boolean {
+  private consecutiveMissingPulses: Map<string, number> = new Map();
+  private maxToleranceWindow: number;
+
+  constructor(maxToleranceWindow: number = 0) {
+    this.maxToleranceWindow = maxToleranceWindow;
+  }
+
+  public evaluateEdgeRequest(request: Request, headers: Record<string, string>, minCompliance = 100): boolean {
+    // In edge environments, track stream state via client IP or similar stream identifier
+    const clientKey = request.headers.get("cf-connecting-ip") || "unknown";
+    
     const esKey = headers["cmcd-custom-hik-es"] || headers["CMCD-Custom-hik-es"];
-    if (!esKey) return false;
+    
+    if (!esKey) {
+      const currentMissing = (this.consecutiveMissingPulses.get(clientKey) || 0) + 1;
+      this.consecutiveMissingPulses.set(clientKey, currentMissing);
+      
+      if (currentMissing <= this.maxToleranceWindow) {
+        return true; // Tolerate missing pulse
+      }
+      return false; // Zero-trust failure
+    }
+
     const score = parseInt(esKey, 10);
+    this.consecutiveMissingPulses.delete(clientKey); // Reset on success
+
     if (isNaN(score) || score < minCompliance) return false;
     return true;
   }
@@ -28,7 +50,8 @@ export default {
       return fetch(request);
     }
 
-    const telemetryHandler = new EdgeTelemetryHandler();
+    // Initialize with a tolerance window of 3 missing pulses
+    const telemetryHandler = new EdgeTelemetryHandler(3);
 
     // 2. Convert Request Headers map to standard record dictionary
     const requestHeaders: Record<string, string> = {};
@@ -38,7 +61,7 @@ export default {
 
     // 3. Evaluate the request for Zero-Trust Governance Compliance
     // Ensures real-time hik-es is 100% compliant before CDN transmits streaming data
-    const isCompliant = telemetryHandler.evaluateEdgeRequest(requestHeaders, 100);
+    const isCompliant = telemetryHandler.evaluateEdgeRequest(request, requestHeaders, 100);
 
     if (!isCompliant) {
       // 4. Instantly disconnect malicious, deepfaked, or unverified streams at the Edge

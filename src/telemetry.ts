@@ -11,7 +11,18 @@ export interface EthicalPulseConfig {
   chainDepth: number; // How many sequential fMP4 fragments have been successfully chained
 }
 
+export interface EdgeTelemetryConfig {
+  maxToleranceWindow?: number; // Number of consecutive missing pulses to tolerate
+}
+
 export class CMCDTelemetryHandler {
+  private consecutiveMissingPulses = 0;
+  private maxToleranceWindow: number;
+
+  constructor(config?: EdgeTelemetryConfig) {
+    this.maxToleranceWindow = config?.maxToleranceWindow || 0;
+  }
+
   /**
    * Generates the Custom Media Common Data (CMCD v2) telemetry headers 
    * to broadcast the integrity state of a live stream segment.
@@ -54,14 +65,24 @@ export class CMCDTelemetryHandler {
     const esKey = normalizedHeaders["cmcd-custom-hik-es"];
     
     if (!esKey) {
-      // Zero-trust: if the ethical pulse is entirely missing, the stream is unverified (unauthorized).
+      // Network drop or missing pulse: Use the tolerance window
+      this.consecutiveMissingPulses++;
+      if (this.consecutiveMissingPulses <= this.maxToleranceWindow) {
+        // Tolerate this missing pulse as a transient network issue
+        return true;
+      }
+      
+      // Zero-trust: once we exceed the buffering window, kill the stream.
       return false;
     }
 
     const ethicalScore = parseInt(esKey, 10);
     
+    // Once we receive a valid telemetry pulse, we can reset our missing pulse counter
+    this.consecutiveMissingPulses = 0;
+
     if (isNaN(ethicalScore) || ethicalScore < minimumCompliance) {
-      // The stream has failed KMIR validation (e.g., untagged deepfake detected upstream)
+      // The stream has actively failed KMIR validation (e.g., untagged deepfake detected upstream)
       return false;
     }
 

@@ -58,6 +58,30 @@ async function runV2Tests() {
   }
   console.log(`✅ Bypass Request (No Ethical Pulse) correctly dropped at the Edge.`);
 
+  // Tolerance Window State (Tolerating missing pulse)
+  const tolerantTelemetry = new CMCDTelemetryHandler({ maxToleranceWindow: 2 });
+  if (!tolerantTelemetry.evaluateEdgeRequest(bypassHeaders)) {
+    throw new Error("Telemetry Test Failed: Missing pulse not tolerated by window.");
+  }
+  console.log(`✅ Missing pulse correctly tolerated (1/2 missing).`);
+  
+  if (!tolerantTelemetry.evaluateEdgeRequest(bypassHeaders)) {
+    throw new Error("Telemetry Test Failed: Missing pulse not tolerated by window second time.");
+  }
+  console.log(`✅ Missing pulse correctly tolerated (2/2 missing).`);
+
+  if (tolerantTelemetry.evaluateEdgeRequest(bypassHeaders)) {
+    throw new Error("Telemetry Test Failed: Missing pulse tolerated beyond window.");
+  }
+  console.log(`✅ Missing pulse correctly blocked after tolerance window exceeded (3/2 missing).`);
+
+  // Recovering from missing pulse
+  tolerantTelemetry.evaluateEdgeRequest(bypassHeaders); // 1 miss
+  if (!tolerantTelemetry.evaluateEdgeRequest(validHeaders)) { // reset
+    throw new Error("Telemetry Test Failed: Valid pulse blocked after missing pulse.");
+  }
+  console.log(`✅ Counter reset after receiving valid pulse.`);
+
   console.log("\n🎉 All v2.0 Sequential Truth Engine Tests Passed successfully!");
 }
 
