@@ -154,7 +154,7 @@ After signing and anchoring, you receive:
 
 # HumanisKind (HIK) SDK License Agreement (Version 1.0)
 
-**Copyright (c) 2026 Martín Riotorto & Luiza Sadowska.**
+**Copyright (c) 2026 Martín Riotorto & Luiza Sadowska & Federico Brubacher.**
 
 ## 1. Overview
 This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
