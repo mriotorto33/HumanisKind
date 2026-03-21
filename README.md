@@ -81,6 +81,12 @@ const certificate = await signAndAnchor(assetPath, {
 
 ### Fullstack Server & UX Simulator (Next.js)
 A complete, plug-and-play Next.js App Router template is included showcasing seamless backend KMIR validation and a dynamic streaming Player UX that intercepts deepfakes visually.
+
+The **v2.0 Wide Live Test** dashboard features an interactive Action Control Panel allowing you to manually deploy zero-trust sabotage techniques directly against the running stream:
+- **Drop Packet**: Test the `hik-tw` Tolerance Window recovering from network loss.
+- **Submit Authorized Ad-Break**: Instructs the Edge CDN to safely sleep using a cryptographically verified `hik-sig`.
+- **Spoof Deepfake Ad**: Watch the Edge CDN instantly block a spoofed `hik-ab: 1` payload because it lacks the mathematical `hik-sig` seal.
+
 ```bash
 cd examples/nextjs-boilerplate
 npm install     

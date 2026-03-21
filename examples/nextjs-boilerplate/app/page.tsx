@@ -13,6 +13,7 @@ export default function Home() {
   const [streamLog, setStreamLog] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sequence, setSequence] = useState(0);
+  const [streamAction, setStreamAction] = useState<"normal" | "drop" | "ad_break" | "spoof" | "deepfake">("normal");
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [streamLog]);
@@ -22,22 +23,29 @@ export default function Home() {
     if (isPlaying && activeTab === "v2") {
       interval = setInterval(async () => {
         const currentSeq = sequence + 1;
+        
+        // Capture the one-time action and immediately reset it so the sequence auto-recovers
         setSequence(currentSeq);
-        const isDeepfake = currentSeq === 4; 
+        const actionToApply = streamAction;
+        if (streamAction !== "normal") {
+           setStreamAction("normal");
+        }
+
         try {
-          const res = await fetch(`/api/stream?seq=${currentSeq}&deepfake=${isDeepfake}`);
+          const res = await fetch(`/api/advanced-stream?seq=${currentSeq}&action=${actionToApply}`);
+          const data = await res.json();
+          
           if (res.status === 403) {
-             setStreamLog(prev => [...prev, `[CDN EDGE] ❌ BLOCKED Seq ${currentSeq} - Stream disconnected. KMIR Policy Failed.`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] ❌ BLOCKED Seq ${currentSeq} - ${data.error}`]);
              setIsPlaying(false);
           } else {
-             const data = await res.json();
-             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ SERVED Seq ${currentSeq} - Merkle Chain Valid. Ethical Pulse (hik-es) is ${data.hikEs}%`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ SERVED Seq ${currentSeq} - ${data.message}`]);
           }
         } catch (e: any) { setIsPlaying(false); }
       }, 1500);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, sequence, activeTab]);
+  }, [isPlaying, sequence, activeTab, streamAction]);
 
   const runAnchorTest = async () => {
     setIsAnchoring(true);
@@ -131,9 +139,21 @@ export default function Home() {
           </div>
 
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem" }}>
-            <button onClick={() => { setStreamLog([]); setSequence(0); setIsPlaying(true); }} style={{ padding: "1rem 2rem", background: "#000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>
-              Initialize Live Stream
-            </button>
+            {isPlaying ? (
+              <>
+                <button onClick={() => setStreamAction("drop")} style={actionBtn("#FF9800")}>Drop Packet (Tolerance Window)</button>
+                <button onClick={() => setStreamAction("ad_break")} style={actionBtn("#2196F3")}>Submit Authorized Ad-Break</button>
+                <button onClick={() => setStreamAction("spoof")} style={actionBtn("#d500f9")}>Spoof Deepfake Ad (Blocked)</button>
+                <button onClick={() => setStreamAction("deepfake")} style={actionBtn("#F44336")}>Inject Synthetic Deepfake (Blocked)</button>
+              </>
+            ) : (
+              <button 
+                onClick={() => { setStreamLog([]); setSequence(0); setIsPlaying(true); setStreamAction("normal"); }} 
+                style={{ padding: "1rem 2rem", background: "#000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}
+              >
+                Initialize Live Stream
+              </button>
+            )}
           </div>
 
           <div style={{ marginTop: "2rem", padding: "1.5rem", background: "#f8f9fa", borderRadius: "8px", border: "1px solid #ddd", height: "250px", overflowY: "auto" }}>
@@ -161,5 +181,18 @@ function tabStyle(active: boolean): React.CSSProperties {
     cursor: "pointer",
     fontWeight: "bold",
     fontSize: "1rem"
+  };
+}
+
+function actionBtn(color: string): React.CSSProperties {
+  return {
+    padding: "0.75rem 1rem",
+    background: "transparent",
+    color: color,
+    border: `2px solid ${color}`,
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontSize: "0.9rem"
   };
 }
