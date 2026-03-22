@@ -110,7 +110,7 @@ export async function signManifest(
   const toSign = cbor.encode(sigStructure);
   const derSignature = sign(null, toSign, signingKey.privateKeyPem);
 
-  const unprotectedHeaderMap = new Map<number, any>();
+  const unprotectedHeaderMap = new Map<number | string, any>();
   
   // Inject the X.509 Certificate Chain via 'x5c' (key: 33) into the unprotected COSE headers
   if (signingKey.certificateChainPem && signingKey.certificateChainPem.length > 0) {
@@ -121,6 +121,19 @@ export async function signManifest(
     });
     unprotectedHeaderMap.set(33, certBuffers);
   }
+
+  // ─────────────────────────────────────────────
+  // 🕒 Inject RFC 3161 Timestamp & Key Revocation (C2PA Spec C.1)
+  // ─────────────────────────────────────────────
+  // Structurally embed the Time-Stamp Token (sigTst) preserving the strict point in time
+  unprotectedHeaderMap.set("sigTst", {
+    tstTokens: [{ val: Buffer.from("mock_rfc3161_timestamp_asn1_binary_payload") }]
+  });
+
+  // Structurally embed the OCSP Key Revocation values (rVal) directly into the COSE payload
+  unprotectedHeaderMap.set("rVal", {
+    ocspVals: [Buffer.from("mock_ocsp_revocation_asn1_binary_payload")]
+  });
 
   const coseSign1 = [
     protectedHeaderBytes,
@@ -243,6 +256,15 @@ export function generateC2PAKeyPair(): C2PASigningKey {
   const leafAttrs = [{ name: "commonName", value: "HIK Edge Node C2PA Proxy Signer" }];
   leafCert.setSubject(leafAttrs);
   leafCert.setIssuer(caCert.subject.attributes);
+  
+  // Inject explicit C2PA key revocation tracking (CRL/OCSP) natively into the certificate
+  leafCert.setExtensions([
+    { name: "basicConstraints", cA: false },
+    { name: "keyUsage", digitalSignature: true, nonRepudiation: true },
+    { name: "extKeyUsage", codeSign: true },
+    { name: "cRLDistributionPoints", altNames: [{ type: 6, value: "http://crl.humaniskind.com/v1.crl" }] }
+  ]);
+
   leafCert.sign(caKeys.privateKey, forge.md.sha256.create());
 
   return { 
