@@ -5,7 +5,7 @@
  * C2PA v2 compliant real-time fragment signing for fMP4 and HLS/DASH streams.
  */
 
-import { createHash, createSign } from "crypto";
+import { createHash, sign } from "crypto";
 import { type C2PASigningKey, loadOrCreateSigningKey } from "./signer";
 
 export interface StreamFragment {
@@ -74,10 +74,8 @@ export class StreamSigner {
 
     // 3. Cryptographically sign the assertion for Adobe Validator compat
     const assertionStringForSign = JSON.stringify(assertion);
-    const sign = createSign("SHA256");
-    sign.update(Buffer.from(assertionStringForSign, "utf8"));
-    sign.end();
-    assertion.signature = sign.sign(this.signingKey.privateKeyPem).toString("base64url");
+    const signaturePayload = Buffer.from(assertionStringForSign, "utf8");
+    assertion.signature = sign(null, signaturePayload, this.signingKey.privateKeyPem).toString("base64url");
     assertion.certificate_pem = this.signingKey.publicKeyPem;
 
     // 4. Seal the mathematical link into the new chain tip

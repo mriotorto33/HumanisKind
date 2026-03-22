@@ -6,7 +6,7 @@
  * (hik-es, hik-ps) onto edge media segments.
  */
 
-import { createSign, createVerify } from "crypto";
+import { sign, verify } from "crypto";
 import { type C2PASigningKey, loadOrCreateSigningKey } from "./signer";
 
 export interface EthicalPulseConfig {
@@ -84,11 +84,9 @@ export class CMCDTelemetryHandler {
       }
       
       const payloadString = JSON.stringify(payloadObj);
-      const sign = createSign("SHA256");
-      sign.update(Buffer.from(payloadString, "utf8"));
-      sign.end();
+      const signaturePayload = Buffer.from(payloadString, "utf8");
       
-      headers["CMCD-Custom-hik-sig"] = sign.sign(this.signingKey.privateKeyPem).toString("base64url");
+      headers["CMCD-Custom-hik-sig"] = sign(null, signaturePayload, this.signingKey.privateKeyPem).toString("base64url");
     }
 
     return headers;
@@ -124,18 +122,21 @@ export class CMCDTelemetryHandler {
         // This mirrors exactly what generateHeaders signs, so the verification
         // succeeds whether or not an HTTP/2 proxy lowercased the keys in transit.
         const verifyPayload: Record<string, string> = {};
-        const sortedHikKeys = Object.keys(normalizedHeaders)
-          .filter(k => k.startsWith("cmcd-custom-hik-") && k !== "cmcd-custom-hik-sig")
-          .sort();
-        for (const k of sortedHikKeys) {
+        // Instead of dynamically filtering and sorting all request headers (O(n log n)), 
+        // strictly extract only known HIK telemetry keys to guarantee O(1) edge evaluation
+        const knownKeys = [
+          "cmcd-custom-hik-es", 
+          "cmcd-custom-hik-ps", 
+          "cmcd-custom-hik-tw", 
+          "cmcd-custom-hik-ab"
+        ].filter(k => normalizedHeaders[k] !== undefined).sort();
+        
+        for (const k of knownKeys) {
           verifyPayload[k] = normalizedHeaders[k];
         }
 
-        const verify = createVerify("SHA256");
-        verify.update(Buffer.from(JSON.stringify(verifyPayload), "utf8"));
-        verify.end();
-
-        const isValid = verify.verify(this.verificationKeyPem, Buffer.from(sigKey, "base64url"));
+        const signaturePayload = Buffer.from(JSON.stringify(verifyPayload), "utf8");
+        const isValid = verify(null, signaturePayload, this.verificationKeyPem, Buffer.from(sigKey, "base64url"));
         if (!isValid) {
           // The headers were tampered with (e.g., someone spoofed an ad-break or inflated their ethical score)
           return false;
