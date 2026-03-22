@@ -26,6 +26,13 @@ Evolving the protocol beyond localized static files directly into hyper-scale, l
   - `CMCD-Custom-hik-ab` (Ad Break): Specifically authorizes an unverified third-party intermission (SSAI) to allow seamless mid-roll ad insertions without triggering zero-trust stream termination.
   - **`CMCD-Custom-hik-sig`** (Cryptographic Telemetry Signature): An Ed25519 signature of the telemetry payload ensuring absolute mathematical protection against deepfakers spoofing the `hik-ab` or `hik-es` values at the CDN edge.
 * **Hyperscale Edge CDN Interception**: Serverless edge infrastructure (e.g., Cloudflare Workers / Fastly Compute) physically inspects the cryptographically signed `hik-sig` pulse, empowering networks to physically disconnect streaming packets in milliseconds if an unauthorized deepfake attempts to intercept the broadcast or spoof an ad break. Network packet loss is safely tolerated through stateful buffering windows configured by the broadcaster.
+* **Automated Proxy CA (Enterprise X.509)**: The backend SDK automatically generates and securely wraps localized ephemeral keys into standard `X.509` certificate chains using `node-forge`. These certificates are dynamically injected directly into the `C2PA COSE_Sign1` unprotected header (via standard `x5c`), seamlessly eliminating "Raw Public Key" errors from upstream C2PA validators (e.g. Adobe Content Credentials) without requiring front-end infrastructure changes.
+
+### Hardware Broadcaster Requirements (e.g., Mobile / Camera App)
+To interface properly with the v2.0 SDK backend in production (like a live stream from a hardware camera):
+1. **CMCD Headers**: Broadcaster apps must natively inject `CMCD-Custom-hik-es` (Ethical Score), `CMCD-Custom-hik-ps` (Provenance Tally), and optionally `CMCD-Custom-hik-ab` (Ad Breaks) headers to all outgoing video chunks (`.m4s`, `.ts`).
+2. **Hardware Ed25519 Enclaves**: The device (e.g., Android StrongBox / Apple Secure Enclave) must explicitly sign the CMCD telemetry payload utilizing purely hardware-backed `Ed25519` private keys. Attach the Base64URL signature string to the chunk header as `CMCD-Custom-hik-sig`.
+3. **Public Key Handshake**: The app must successfully hand its public `Ed25519` key to the ingestion Edge server when opening the video session. The Edge CDN will rely on this registered key for 100% of its zero-trust drops against live CMCD packets. The Backend Proxy CA isolates this hardware key from the ultimate C2PA Manifest generation, ensuring maximum architectural separation.
 
 ---
 
