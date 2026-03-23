@@ -166,6 +166,8 @@ Commercial use of The Software is strictly prohibited without a valid, paid subs
 * **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
 * **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Luiza) to maintain the integrity of the Human Provenance standard.
 
+
+##This repository is Source Visible for integrity auditing purposes only. The recursive fragment-chaining logic (Root_n) and the Atomic Fail-Close mechanism are proprietary innovations of HumanisKind. Cloning for the purpose of reverse-engineering or derivative work without a license is strictly prohibited
 ## 5. Termination
 Failure to comply with the terms of this license or failure to maintain a paid subscription for commercial use will result in the immediate termination of your right to use The Software.
 
