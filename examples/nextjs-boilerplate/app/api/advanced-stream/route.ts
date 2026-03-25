@@ -100,9 +100,11 @@ export async function GET(request: Request) {
 
   // 4. The Edge serves the authenticated video frame from the upstream Origin
   // For the demonstration, we simulate a "Rolling Merkle Checkpoint" anchored every segment
-  const manifestHash = `0x${Math.random().toString(16).slice(2, 66)}`;
-  const txHash = `0x${Math.random().toString(16).slice(2, 66)}`;
-  const ipfsUrl = `ipfs://Qm${Math.random().toString(36).slice(2, 48)}`;
+  // Generate full 64-character hashes for maximum fidelity
+  const manifestHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+  const txHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+  // Use a GUARANTEED valid Pinata CID from the user's environment to ensure gateway resolution
+  const ipfsUrl = `ipfs://QmR2B7HhJLzY6ADxGLqHUsSe8XUxA6acHVQRXvuz1cTwCS`; 
 
   return NextResponse.json({
     success: true,
