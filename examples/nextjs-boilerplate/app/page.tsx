@@ -65,7 +65,7 @@ export default function Home() {
                },
                {
                  timestamp: timeStr,
-                 message: `[SEQ TRUTH] ANCHORED: Checkpoint Verified.`,
+                 message: `[SEQ TRUTH] ANCHORED: Live Segment Hash Verified.`,
                  type: "success",
                  details: data.checkpoint
                }
