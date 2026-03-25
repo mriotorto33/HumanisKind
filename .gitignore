@@ -9,6 +9,19 @@ artifacts/
 *.log
 *.tgz
 
+# HumanisKind Specific
+*.key.pem
+*.pub.pem
+test-output.txt
+test-results/
+
+# Local env files
+.env*.local
+
 # Next.js Boilerplate Overrides
 **/.next/
 **/node_modules/
+
+# OS Files
+.DS_Store
+Thumbs.db
