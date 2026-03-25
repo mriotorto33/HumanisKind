@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import KillSwitch from "../components/KillSwitch";
+import TelemetryChart from "../components/TelemetryChart";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"v1" | "v2">("v1");
@@ -14,39 +16,49 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sequence, setSequence] = useState(0);
   const [streamAction, setStreamAction] = useState<"normal" | "drop" | "ad_break" | "spoof" | "deepfake" | "stress">("normal");
+  const [esHistory, setEsHistory] = useState<number[]>([]);
+  const [psHistory, setPsHistory] = useState<number[]>([]);
+  const [overheadHistory, setOverheadHistory] = useState<number[]>([]);
+  const [isTriggered, setIsTriggered] = useState(false);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [streamLog]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying && activeTab === "v2") {
+    if (isPlaying && activeTab === "v2" && !isTriggered) {
       interval = setInterval(async () => {
         const currentSeq = sequence + 1;
-        
         setSequence(currentSeq);
         const actionToApply = streamAction;
-        if (streamAction !== "normal") {
-           setStreamAction("normal");
-        }
+        if (streamAction !== "normal") setStreamAction("normal");
 
         try {
           const res = await fetch(`/api/advanced-stream?seq=${currentSeq}&action=${actionToApply}`);
           const data = await res.json();
           
-          const metricStr = data.metrics ? ` | Edge CPU: ${data.metrics.overhead}ms | Total: ${data.metrics.totalTime}ms` : "";
+          const es = data.receivedHeaders?.["CMCD-Custom-hik-es"] ? parseInt(data.receivedHeaders["CMCD-Custom-hik-es"]) : (actionToApply === "drop" ? 0 : 100);
+          const ps = data.receivedHeaders?.["CMCD-Custom-hik-ps"] ? parseInt(data.receivedHeaders["CMCD-Custom-hik-ps"]) : currentSeq;
+          const overhead = data.metrics?.overhead || 0;
+
+          setEsHistory(prev => [...prev.slice(-19), es]);
+          setPsHistory(prev => [...prev.slice(-19), ps]);
+          setOverheadHistory(prev => [...prev.slice(-19), overhead]);
+
+          const metricStr = ` | Edge: ${overhead}ms | Total: ${data.metrics?.totalTime}ms`;
 
           if (res.status === 403) {
-             setStreamLog(prev => [...prev, `[CDN EDGE] 🛑 BLOCKED Seq ${currentSeq} - ${data.error}${metricStr}`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] 🛑 CRITICAL: ${data.error}${metricStr}`]);
+             setIsTriggered(true);
              setIsPlaying(false);
           } else {
-             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ SERVED Seq ${currentSeq} - ${data.message}${metricStr}`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ AUTHENTICATED: Seq ${currentSeq} ${metricStr}`]);
           }
         } catch (e: any) { setIsPlaying(false); }
-      }, 1500);
+      }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, sequence, activeTab, streamAction]);
+  }, [isPlaying, sequence, activeTab, streamAction, isTriggered]);
 
   const runAnchorTest = async () => {
     setIsAnchoring(true);
@@ -66,146 +78,225 @@ export default function Home() {
   };
 
   return (
-    <main style={{ padding: "3rem", fontFamily: "sans-serif", maxWidth: "1000px", margin: "0 auto" }}>
-      <h1 style={{ letterSpacing: "-1px", fontSize: "2.5rem" }}>🛡️ Human Is Kind™ <span style={{color: "#666"}}>Console</span></h1>
-      <p style={{ fontSize: "1.1rem", marginBottom: "2rem" }}>Master Dashboard visualizing the deterministic workflows of the HIK Protocol.</p>
+    <main style={{ padding: "3rem", maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
+      {/* Header Section */}
+      <div style={{ marginBottom: "3rem", textAlign: "center" }}>
+        <h1 style={{ fontSize: "3rem", margin: "0 0 0.5rem 0", background: "linear-gradient(to right, #10b981, #3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          Human Is Kind™ <span style={{ color: "var(--text-secondary)", fontWeight: "300" }}>Command</span>
+        </h1>
+        <p style={{ fontSize: "1.2rem", color: "var(--text-secondary)" }}>
+          Deterministic AI Governance & Sequential Truth Engine
+        </p>
+      </div>
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", borderBottom: "2px solid #eee", paddingBottom: "1rem" }}>
+      {/* Tabs */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "3rem" }}>
         <button onClick={() => setActiveTab("v1")} style={tabStyle(activeTab === "v1")}>
-          v1.1 (Static Asset Anchoring)
+          v1.1 Static Asset Anchoring
         </button>
         <button onClick={() => setActiveTab("v2")} style={tabStyle(activeTab === "v2")}>
-          v2.0 (Live Stream SDK Edge)
+          v2.0 Live Stream SDK Edge
         </button>
       </div>
 
+      {/* V1 Workspace */}
       {activeTab === "v1" && (
-        <section>
-          <h2>The Ethical Kernel (v1.1)</h2>
-          <p>Visually confirms the C2PA signing, KMIR policy enforcement, IPFS pinning, and Ethereum/Polygon Blockchain transaction anchoring.</p>
-          
-          <div style={{ background: "#f8f9fa", padding: "1.5rem", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "2rem" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontWeight: "bold", fontSize: "1.1rem" }}>
-              <input type="checkbox" checked={simulateKmirFailure} onChange={e => setSimulateKmirFailure(e.target.checked)} style={{ width: "20px", height: "20px" }} />
-              Simulate KMIR Falsification (Omit deepfake parameter)
-            </label>
-            <p style={{ fontSize: "0.95rem", color: "#666", marginTop: "0.5rem" }}>Check this to omit `no_deepfake_manipulation: true` from the payload, forcefully triggering the SDK's Zero-Trust validation blockade.</p>
-            
-            <button onClick={runAnchorTest} disabled={isAnchoring} style={{ marginTop: "1rem", padding: "0.75rem 1.5rem", background: "#000", color: "#fff", cursor: "pointer", borderRadius: "6px", fontWeight: "bold", fontSize: "1rem" }}>
-              {isAnchoring ? "Anchoring payload to Blockchain..." : "Execute signAndAnchor()"}
-            </button>
-          </div>
-
-          {anchorLog && anchorLog.success && (
-            <div style={{ padding: "1.5rem", border: "3px solid #4CAF50", borderRadius: "8px", background: "#f1f8e9" }}>
-              <h3 style={{ color: "#2E7D32", marginTop: 0, fontSize: "1.5rem" }}>✅ The Sacred Trace Authorized & Anchored!</h3>
-              <p>The C2PA manifest was successfully signed, wrapped into IPFS, and permanently anchored on-chain.</p>
+        <section className="animate-in">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+            <div className="glass-card" style={{ padding: "2rem" }}>
+              <h2 style={{ color: "var(--accent-emerald)" }}>The Ethical Kernel</h2>
+              <p style={{ color: "var(--text-secondary)" }}>Validating an immutable 'Atomic Chain' of provenance for static hardware capture.</p>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
-                <div style={{ background: "#fff", padding: "1rem", borderRadius: "8px", border: "1px solid #c8e6c9" }}>
-                  <h4 style={{ margin: "0 0 0.5rem 0", color: "#2E7D32" }}>Registry Metadata</h4>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "0.9rem", wordBreak: "break-all" }}>
-                    <li><strong>Merkle Hash:</strong> <code>{anchorLog.certificate.manifestHash}</code></li>
-                    <li><strong>Asset Hash:</strong> <code>{anchorLog.certificate.assetHash}</code></li>
-                    <li><strong>IPFS Pin:</strong> <a href={anchorLog.certificate.ipfsUrl} target="_blank" rel="noreferrer">View on IPFS</a></li>
-                    <li style={{ marginTop: "0.5rem" }}><strong>TX Hash:</strong> <br/><code style={{ fontSize: "0.8rem", color: "#666" }}>{anchorLog.certificate.txHash}</code></li>
-                  </ul>
-                </div>
-                <div style={{ background: "#fff", padding: "1rem", borderRadius: "8px", border: "1px solid #c8e6c9" }}>
-                  <h4 style={{ margin: "0 0 0.5rem 0", color: "#2E7D32" }}>Raw IPFS Manifest</h4>
-                  <pre style={{ fontSize: "0.75rem", margin: 0, background: "#f5f5f5", padding: "0.5rem", borderRadius: "4px", maxHeight: "150px", overflowY: "auto" }}>
-                    {JSON.stringify(anchorLog.certificate.manifest, null, 2)}
-                  </pre>
-                </div>
+              <div style={{ marginTop: "2rem", borderTop: "1px solid var(--glass-border)", paddingTop: "1.5rem" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", fontSize: "1rem" }}>
+                  <input type="checkbox" checked={simulateKmirFailure} onChange={e => setSimulateKmirFailure(e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "var(--accent-crimson)" }} />
+                  Simulate KMIR Governance Violation (Deepfake Bypass)
+                </label>
+                
+                <button onClick={runAnchorTest} disabled={isAnchoring} style={primaryBtn(isAnchoring)}>
+                  {isAnchoring ? "CHISELING ATOMIC TRACE..." : "EXECUTE KMIR VALIDATION"}
+                </button>
               </div>
             </div>
-          )}
 
-          {anchorLog && !anchorLog.success && (
-            <div style={{ padding: "1.5rem", border: "3px solid #F44336", borderRadius: "8px", background: "#ffebee" }}>
-              <h3 style={{ color: "#C62828", marginTop: 0, fontSize: "1.5rem" }}>❌ KMIR Policy Engine Crash</h3>
-              <p style={{ color: "#C62828", fontWeight: "bold" }}>The SDK instantly aborted the transaction. Bad data was prevented from reaching the blockchain.</p>
-              <div style={{ background: "#ffcdd2", padding: "1rem", borderRadius: "8px", overflowX: "auto" }}>
-                <pre style={{ margin: 0, color: "#C62828" }}>{anchorLog.error}</pre>
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {anchorLog && anchorLog.success ? (
+                    <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--accent-emerald)" }}>
+                        <h3 className="glow-emerald" style={{ color: "var(--accent-emerald)", margin: 0 }}>✅ ANCHORED</h3>
+                        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
+                          Protocol 1.1: Immutable Trace successfully anchored.
+                        </p>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                          <div style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Merkle Manifest Hash</div>
+                            <code style={{ fontSize: "0.85rem", color: "var(--accent-emerald)", wordBreak: "break-all" }}>{anchorLog.certificate.manifestHash}</code>
+                          </div>
+
+                          <div style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Live IPFS Gateway</div>
+                            <a href={anchorLog.certificate.ipfsUrl} target="_blank" rel="noreferrer" style={{ fontSize: "0.85rem", color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}>
+                              {anchorLog.certificate.ipfsUrl}
+                            </a>
+                          </div>
+
+                          <div style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Broadcaster Wallet</div>
+                            <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", wordBreak: "break-all" }}>
+                              0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+                            </div>
+                          </div>
+
+                          <div style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px" }}>
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Blockchain Transaction</div>
+                            <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", wordBreak: "break-all" }}>
+                              {anchorLog.certificate.txHash}
+                            </div>
+                            <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "0.25rem" }}>
+                               Network: Hardhat Local (31337)
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                ) : anchorLog && (
+                    <div className="glass-card" style={{ padding: "1.5rem", borderLeft: "4px solid var(--accent-crimson)" }}>
+                        <h3 className="glow-crimson" style={{ color: "var(--accent-crimson)", margin: 0 }}>❌ ENFORCED</h3>
+                        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>The Ethical Kernel physically blocked the non-compliant payload.</p>
+                        <div style={{ color: "var(--accent-crimson)", fontFamily: "monospace", padding: "1rem", background: "rgba(0,0,0,0.3)", borderRadius: "8px" }}>
+                            {anchorLog.error}
+                        </div>
+                    </div>
+                )}
             </div>
-          )}
+          </div>
         </section>
       )}
 
+      {/* V2 Workspace */}
       {activeTab === "v2" && (
-        <section>
-          <h2>The Sequential Truth Engine (v2.0)</h2>
-          <p>This UX simulates an fMP4 Edge CDN evaluating CMCDv2 telemetry (`hik-es` and `hik-ps`) in real-time. Notice how the stream aggressively halts the moment an unauthorized AI synthetic payload is introduced!</p>
-          
-          <div style={{ marginTop: "1.5rem", height: "350px", background: isPlaying ? "#000" : "#111", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: isPlaying ? "4px solid #4CAF50" : "4px solid #F44336", transition: "all 0.3s ease" }}>
-            {isPlaying ? (
-               <h2 style={{ color: "#4CAF50", letterSpacing: "2px" }}>▶ LIVE BROADCAST IS SECURE...</h2>
-            ) : (
-               <>
-                 <h2 style={{ color: "#F44336", textAlign: "center", marginBottom: "0.5rem" }}>
-                   {sequence > 0 ? "⏹ STREAM HALTED BY GOVERNANCE" : "⏹ PLAYER OFFLINE"}
-                 </h2>
-                 {sequence > 0 && <p style={{ color: "#ff8a80" }}>Unauthorized Deepfake attempt blocked at the Edge.</p>}
-               </>
-            )}
-          </div>
-
-          <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem" }}>
-            {isPlaying ? (
-              <>
-                <button onClick={() => setStreamAction("drop")} style={actionBtn("#FF9800")}>Drop Packet (Tolerance Window)</button>
-                <button onClick={() => setStreamAction("spoof")} style={actionBtn("#d500f9")}>Spoof Deepfake Ad (Blocked)</button>
-                <button onClick={() => setStreamAction("deepfake")} style={actionBtn("#F44336")}>Inject Synthetic Deepfake (Blocked)</button>
-                <button onClick={() => setStreamAction("stress")} style={actionBtn("#FFEB3B")}>🚨 Heavy Governance Stress Test</button>
-              </>
-            ) : (
-              <button 
-                onClick={() => { setStreamLog([]); setSequence(0); setIsPlaying(true); setStreamAction("normal"); }} 
-                style={{ padding: "1rem 2rem", background: "#000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}
-              >
-                Initialize Live Stream
-              </button>
-            )}
-          </div>
-
-          <div style={{ marginTop: "2rem", padding: "1.5rem", background: "#f8f9fa", borderRadius: "8px", border: "1px solid #ddd", height: "250px", overflowY: "auto" }}>
-            <h3 style={{ marginTop: 0, borderBottom: "1px solid #ccc", paddingBottom: "0.5rem" }}>HIK Telemetry Log (CMCDv2)</h3>
-            {streamLog.map((log, i) => (
-              <div key={i} style={{ color: log.includes("BLOCKED") ? "#D32F2F" : "#388E3C", fontFamily: "monospace", marginBottom: "0.5rem", fontWeight: log.includes("BLOCKED") ? "bold" : "normal" }}>
-                {log}
+        <section className="animate-in">
+          <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "2rem" }}>
+            {/* Control Sidebar */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              <KillSwitch isTriggered={isTriggered} isArmed={isPlaying} />
+              
+              <div className="glass-card" style={{ padding: "1.5rem" }}>
+                <h3 style={{ fontSize: "1rem", marginBottom: "1rem" }}>Attack Simulation</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <button onClick={() => setStreamAction("drop")} disabled={!isPlaying} style={actionBtn("#f59e0b")}>Drop Packet (Jitter)</button>
+                  <button onClick={() => setStreamAction("spoof")} disabled={!isPlaying} style={actionBtn("#a855f7")}>Spoof Ad-Break (Auth Failure)</button>
+                  <button onClick={() => setStreamAction("deepfake")} disabled={!isPlaying} style={actionBtn("#ef4444")}>Inject Synthetic Payload</button>
+                  <button onClick={() => setStreamAction("stress")} disabled={!isPlaying} style={actionBtn("#fbbf24")}>Heavy Governance Stress</button>
+                  
+                  {!isPlaying && (
+                    <button 
+                      onClick={() => { setStreamLog([]); setSequence(0); setIsPlaying(true); setStreamAction("normal"); setIsTriggered(false); setEsHistory([]); setPsHistory([]); setOverheadHistory([]); }} 
+                      style={startBtn}
+                    >
+                      INITIALIZE TRUTH ENGINE
+                    </button>
+                  )}
+                </div>
               </div>
-            ))}
-            <div ref={logEndRef} />
+            </div>
+
+            {/* Main Monitoring Hub */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+               {/* Telemetry Charts */}
+               <div style={{ display: "flex", gap: "1rem" }}>
+                  <TelemetryChart label="HIK-ES (Ethical Score)" data={esHistory} color="rgba(16, 185, 129, 1)" max={100} />
+                  <TelemetryChart label="HIK-PS (Provenance Depth)" data={psHistory} color="rgba(59, 130, 246, 1)" max={Math.max(...psHistory, 10)} />
+                  <TelemetryChart label="Edge Overhead (ms)" data={overheadHistory} color="rgba(245, 158, 11, 1)" max={Math.max(...overheadHistory, 10)} />
+               </div>
+
+               {/* Live Log */}
+               <div className="glass-card" style={{ padding: "1.5rem", flex: 1, display: "flex", flexDirection: "column" }}>
+                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--glass-border)", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
+                    <h3 style={{ margin: 0, fontSize: "1rem" }}>Edge Telemetry Stream (CMCD v2)</h3>
+                    <div style={{ fontSize: "0.8rem", color: isPlaying ? "var(--accent-emerald)" : "var(--accent-crimson)" }}>
+                        {isPlaying ? "• CORE_ENGINE_ACTIVE" : "• CORE_ENGINE_HALTED"}
+                    </div>
+                 </div>
+                 <div style={{ height: "300px", overflowY: "auto", fontFamily: "monospace", fontSize: "0.85rem" }}>
+                    {streamLog.map((log, i) => (
+                      <div key={i} style={{ color: log.includes("CRITICAL") ? "var(--accent-crimson)" : "var(--accent-emerald)", marginBottom: "0.4rem" }}>
+                        {log}
+                      </div>
+                    ))}
+                    <div ref={logEndRef} />
+                 </div>
+               </div>
+            </div>
           </div>
         </section>
       )}
+
+      <style jsx global>{`
+        .animate-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </main>
   );
 }
 
 function tabStyle(active: boolean): React.CSSProperties {
   return {
-    padding: "0.75rem 1.5rem",
-    background: active ? "#000" : "transparent",
-    color: active ? "#fff" : "#666",
-    border: active ? "none" : "2px solid #ddd",
-    borderRadius: "8px",
+    padding: "0.75rem 2rem",
+    background: active ? "rgba(16, 185, 129, 0.1)" : "transparent",
+    color: active ? "var(--accent-emerald)" : "var(--text-secondary)",
+    border: active ? "1px solid var(--accent-emerald)" : "1px solid var(--glass-border)",
+    borderRadius: "100px",
     cursor: "pointer",
     fontWeight: "bold",
-    fontSize: "1rem"
+    transition: "all 0.3s ease",
+    fontSize: "0.95rem"
+  };
+}
+
+function primaryBtn(disabled: boolean): React.CSSProperties {
+  return {
+    marginTop: "2rem",
+    width: "100%",
+    padding: "1rem",
+    background: "var(--accent-emerald)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: "bold",
+    fontSize: "1rem",
+    opacity: disabled ? 0.6 : 1
   };
 }
 
 function actionBtn(color: string): React.CSSProperties {
   return {
-    padding: "0.75rem 1rem",
-    background: "transparent",
+    padding: "0.75rem",
+    background: "rgba(0,0,0,0.2)",
     color: color,
-    border: `2px solid ${color}`,
+    border: `1px solid ${color}44`,
     borderRadius: "6px",
     cursor: "pointer",
-    fontWeight: "bold",
-    fontSize: "0.9rem"
+    fontWeight: "600",
+    fontSize: "0.85rem",
+    textAlign: "left"
   };
 }
+
+const startBtn: React.CSSProperties = {
+  marginTop: "1rem",
+  padding: "1rem",
+  background: "#fff",
+  color: "#000",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontWeight: "bold",
+  fontSize: "1rem",
+  boxShadow: "0 4px 14px rgba(255,255,255,0.2)"
+};

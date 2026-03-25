@@ -20,8 +20,8 @@ export async function GET(request: Request) {
 
   // --- Middleware Simulation (Ooptimizado para el caso de Matías) ---
   // En producción (Rust/WASM), la validación es ultra-rápida (< 5ms)
-  const overhead = 2 + Math.floor(Math.random() * 3); 
-  const latency = 30 + Math.floor(Math.random() * 30); // Latencia de red normal de un CDN Edge
+  const overhead = action === "stress" ? 500 : (2 + Math.floor(Math.random() * 5)); 
+  const latency = action === "normal" ? (20 + Math.floor(Math.random() * 15)) : (5 + Math.floor(Math.random() * 5)); 
   
   // 1. Latency Simulation
   await new Promise(resolve => setTimeout(resolve, latency));

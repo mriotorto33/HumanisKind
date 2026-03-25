@@ -13,12 +13,11 @@ export async function POST(request: Request) {
 
     const actualHash = "0x" + hashAssetFile(assetPath);
 
-    // Read Pinata keys from the environment or fallback to the provided demo keys
-    const pinataApiKey = process.env.PINATA_API_KEY || "af3c785db618cf47c992";
-    const pinataSecretKey = process.env.PINATA_SECRET_KEY || "296ed0fbecbe1e0f2b52dde9c2fd107d12131bfdb821eb93c15739ae3614169f";
+    const pinataApiKey = process.env.PINATA_API_KEY;
+    const pinataSecretKey = process.env.PINATA_SECRET_KEY;
     
-    // Automatically fallback to mock IPFS only if keys are completely missing
-    const useMockIPFS = !(pinataApiKey && pinataSecretKey);
+    // Strictly live IPFS as requested
+    const useMockIPFS = false;
 
     const config = {
       useMockIPFS,
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
         // Zero-config Vercel deployment: Auto-connect to Sepolia if built on Vercel without an explicit RPC
         rpcUrl: process.env.RPC_URL || (process.env.VERCEL === "1" ? "https://ethereum-sepolia-rpc.publicnode.com" : "http://127.0.0.1:8545"),
         privateKey: process.env.PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
-        contractAddress: process.env.HIK_REGISTRY_ADDRESS || "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+        contractAddress: process.env.HIK_REGISTRY_ADDRESS || "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       },
       storage: {
         pinataApiKey,
