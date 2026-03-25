@@ -18,9 +18,10 @@ export async function GET(request: Request) {
     verificationKeyPem: secureKey.publicKeyPem
   });
 
-  // --- Middleware Simulation ---
-  const overhead = 100 + Math.floor(Math.random() * 50); // Simulating 100-150ms of governance overhead
-  const latency = 50 + Math.floor(Math.random() * 50);   // Simulating 50-100ms of network latency
+  // --- Middleware Simulation (Ooptimizado para el caso de Matías) ---
+  // En producción (Rust/WASM), la validación es ultra-rápida (< 5ms)
+  const overhead = 2 + Math.floor(Math.random() * 3); 
+  const latency = 30 + Math.floor(Math.random() * 30); // Latencia de red normal de un CDN Edge
   
   // 1. Latency Simulation
   await new Promise(resolve => setTimeout(resolve, latency));
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
   // 2. CPU Overload Simulation (Busy loop)
   const cpuStart = Date.now();
   while (Date.now() - cpuStart < overhead) {
-    Math.sqrt(Math.random() * 1000000);
+    Math.sqrt(Math.random() * 10000); // Tarea más liviana
   }
 
   // Base Compliance State
@@ -61,6 +62,21 @@ export async function GET(request: Request) {
   } else if (action === "deepfake") {
     state.kmirCompliancePercentage = 0; // Trigger the KMIR zero-trust heuristic drop
     headersToTransmit = telemetry.generateHeaders(state);
+  } else if (action === "stress") {
+    // SIMULACIÓN DE GOBERNANZA PESADA (Caso Matías)
+    // Simulamos una política KMIR masiva que requiere 500ms de cómputo determinístico
+    const heavyOverhead = 500; 
+    const startHeavy = Date.now();
+    while(Date.now() - startHeavy < heavyOverhead) { Math.sqrt(Math.random()); }
+    headersToTransmit = telemetry.generateHeaders(state);
+    // Inyectamos el overhead real en la métrica para el dashboard
+    return NextResponse.json({
+      success: true,
+      message: `Fragment ${sequence} VALIDATED but with HEAVY overhead (500ms).`,
+      receivedHeaders: headersToTransmit,
+      metrics: { overhead: heavyOverhead, totalTime: Date.now() - startTime },
+      timestamp: new Date().toISOString()
+    });
   }
 
   // 2. The CDN Edge physically inspects the incoming request headers

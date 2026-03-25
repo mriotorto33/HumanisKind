@@ -13,7 +13,7 @@ export default function Home() {
   const [streamLog, setStreamLog] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sequence, setSequence] = useState(0);
-  const [streamAction, setStreamAction] = useState<"normal" | "drop" | "ad_break" | "spoof" | "deepfake">("normal");
+  const [streamAction, setStreamAction] = useState<"normal" | "drop" | "ad_break" | "spoof" | "deepfake" | "stress">("normal");
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [streamLog]);
@@ -155,9 +155,9 @@ export default function Home() {
             {isPlaying ? (
               <>
                 <button onClick={() => setStreamAction("drop")} style={actionBtn("#FF9800")}>Drop Packet (Tolerance Window)</button>
-                <button onClick={() => setStreamAction("ad_break")} style={actionBtn("#2196F3")}>Submit Authorized Ad-Break</button>
                 <button onClick={() => setStreamAction("spoof")} style={actionBtn("#d500f9")}>Spoof Deepfake Ad (Blocked)</button>
                 <button onClick={() => setStreamAction("deepfake")} style={actionBtn("#F44336")}>Inject Synthetic Deepfake (Blocked)</button>
+                <button onClick={() => setStreamAction("stress")} style={actionBtn("#FFEB3B")}>🚨 Heavy Governance Stress Test</button>
               </>
             ) : (
               <button 
