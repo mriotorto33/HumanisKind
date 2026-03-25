@@ -146,7 +146,7 @@ export default function Home() {
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                           <div style={{ background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "8px" }}>
-                            <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Merkle Manifest Hash</div>
+                             <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "bold" }}>Static Asset Root (Permanent)</div>
                             <code style={{ fontSize: "0.85rem", color: "var(--accent-emerald)", wordBreak: "break-all" }}>{anchorLog.certificate.manifestHash}</code>
                           </div>
 
@@ -245,7 +245,7 @@ export default function Home() {
                                 <details style={{ marginTop: "0.25rem", color: "var(--text-secondary)", fontSize: "0.75rem", cursor: "pointer" }}>
                                     <summary style={{ outline: "none", opacity: 0.8 }}>Technical Trace (IPFS/TX)</summary>
                                     <div style={{ padding: "0.5rem", background: "rgba(0,0,0,0.4)", borderRadius: "4px", marginTop: "0.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                                        <div><strong>Merkle Root:</strong> <code style={{ color: "var(--accent-emerald)", wordBreak: "break-all" }}>{log.details.manifestHash}</code></div>
+                                        <div><strong>Video Segment Root (Live):</strong> <code style={{ color: "var(--accent-emerald)", wordBreak: "break-all" }}>{log.details.manifestHash}</code></div>
                                         <div><strong>IPFS Pin:</strong> <a href={`https://gateway.pinata.cloud/ipfs/${log.details.ipfsUrl.replace("ipfs://", "")}`} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}>{log.details.ipfsUrl}</a></div>
                                         <div><strong>TX Hash:</strong> <code style={{ opacity: 0.7, wordBreak: "break-all" }}>{log.details.txHash}</code></div>
                                     </div>
