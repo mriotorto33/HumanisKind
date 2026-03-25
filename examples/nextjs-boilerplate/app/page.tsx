@@ -246,7 +246,7 @@ export default function Home() {
                                     <summary style={{ outline: "none", opacity: 0.8 }}>Technical Trace (IPFS/TX)</summary>
                                     <div style={{ padding: "0.5rem", background: "rgba(0,0,0,0.4)", borderRadius: "4px", marginTop: "0.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                                         <div><strong>Video Segment Root (Live):</strong> <code style={{ color: "var(--accent-emerald)", wordBreak: "break-all" }}>{log.details.manifestHash}</code></div>
-                                        <div><strong>IPFS Pin:</strong> <a href={`https://gateway.pinata.cloud/ipfs/${log.details.ipfsUrl.replace("ipfs://", "")}`} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}>{log.details.ipfsUrl}</a></div>
+                                        <div><strong>IPFS Pin:</strong> <a href={`https://ipfs.io/ipfs/${log.details.ipfsUrl.replace("ipfs://", "")}`} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}>{log.details.ipfsUrl}</a></div>
                                         <div><strong>TX Hash:</strong> <code style={{ opacity: 0.7, wordBreak: "break-all" }}>{log.details.txHash}</code></div>
                                     </div>
                                 </details>
