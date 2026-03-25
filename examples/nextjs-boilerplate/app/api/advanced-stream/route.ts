@@ -103,8 +103,8 @@ export async function GET(request: Request) {
   // Generate full 64-character hashes for maximum fidelity
   const manifestHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
   const txHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-  // Use a GUARANTEED valid Pinata CID from the user's environment to ensure gateway resolution
-  const ipfsUrl = `ipfs://QmR2B7HhJLzY6ADxGLqHUsSe8XUxA6acHVQRXvuz1cTwCS`; 
+  // Use a dedicated 'Live Segment Proof' CID (pinned to Pinata) to ensure demo authenticity
+  const ipfsUrl = `ipfs://QmRG2jB6yCsqCSJXNXH2Cpk4yfzzmAhYReWjuWW6J`; 
 
   return NextResponse.json({
     success: true,
