@@ -24,7 +24,6 @@ export default function Home() {
       interval = setInterval(async () => {
         const currentSeq = sequence + 1;
         
-        // Capture the one-time action and immediately reset it so the sequence auto-recovers
         setSequence(currentSeq);
         const actionToApply = streamAction;
         if (streamAction !== "normal") {
@@ -35,11 +34,13 @@ export default function Home() {
           const res = await fetch(`/api/advanced-stream?seq=${currentSeq}&action=${actionToApply}`);
           const data = await res.json();
           
+          const metricStr = data.metrics ? ` | Edge CPU: ${data.metrics.overhead}ms | Total: ${data.metrics.totalTime}ms` : "";
+
           if (res.status === 403) {
-             setStreamLog(prev => [...prev, `[CDN EDGE] ❌ BLOCKED Seq ${currentSeq} - ${data.error}`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] 🛑 BLOCKED Seq ${currentSeq} - ${data.error}${metricStr}`]);
              setIsPlaying(false);
           } else {
-             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ SERVED Seq ${currentSeq} - ${data.message}`]);
+             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ SERVED Seq ${currentSeq} - ${data.message}${metricStr}`]);
           }
         } catch (e: any) { setIsPlaying(false); }
       }, 1500);
@@ -99,12 +100,24 @@ export default function Home() {
             <div style={{ padding: "1.5rem", border: "3px solid #4CAF50", borderRadius: "8px", background: "#f1f8e9" }}>
               <h3 style={{ color: "#2E7D32", marginTop: 0, fontSize: "1.5rem" }}>✅ The Sacred Trace Authorized & Anchored!</h3>
               <p>The C2PA manifest was successfully signed, wrapped into IPFS, and permanently anchored on-chain.</p>
-              <ul style={{ wordBreak: "break-all", lineHeight: "1.6", fontSize: "1.1rem", background: "#e8f5e9", padding: "1rem 2rem", borderRadius: "8px" }}>
-                <li><strong>Merkle Hash:</strong> <code>{anchorLog.certificate.manifestHash}</code></li>
-                <li><strong>Local Asset:</strong> <code>{anchorLog.certificate.localPath}</code></li>
-                <li><strong>IPFS Pin:</strong> <a href={anchorLog.certificate.ipfsUrl} target="_blank" rel="noreferrer">{anchorLog.certificate.ipfsUrl}</a></li>
-                <li style={{ marginTop: "0.5rem" }}><strong>Smart Contract TX Hash:</strong> <br/><code style={{ background: "#4CAF50", color: "#fff", padding: "0.2rem 0.5rem", borderRadius: "4px" }}>{anchorLog.certificate.txHash}</code></li>
-              </ul>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
+                <div style={{ background: "#fff", padding: "1rem", borderRadius: "8px", border: "1px solid #c8e6c9" }}>
+                  <h4 style={{ margin: "0 0 0.5rem 0", color: "#2E7D32" }}>Registry Metadata</h4>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "0.9rem", wordBreak: "break-all" }}>
+                    <li><strong>Merkle Hash:</strong> <code>{anchorLog.certificate.manifestHash}</code></li>
+                    <li><strong>Asset Hash:</strong> <code>{anchorLog.certificate.assetHash}</code></li>
+                    <li><strong>IPFS Pin:</strong> <a href={anchorLog.certificate.ipfsUrl} target="_blank" rel="noreferrer">View on IPFS</a></li>
+                    <li style={{ marginTop: "0.5rem" }}><strong>TX Hash:</strong> <br/><code style={{ fontSize: "0.8rem", color: "#666" }}>{anchorLog.certificate.txHash}</code></li>
+                  </ul>
+                </div>
+                <div style={{ background: "#fff", padding: "1rem", borderRadius: "8px", border: "1px solid #c8e6c9" }}>
+                  <h4 style={{ margin: "0 0 0.5rem 0", color: "#2E7D32" }}>Raw IPFS Manifest</h4>
+                  <pre style={{ fontSize: "0.75rem", margin: 0, background: "#f5f5f5", padding: "0.5rem", borderRadius: "4px", maxHeight: "150px", overflowY: "auto" }}>
+                    {JSON.stringify(anchorLog.certificate.manifest, null, 2)}
+                  </pre>
+                </div>
+              </div>
             </div>
           )}
 

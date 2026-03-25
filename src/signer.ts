@@ -240,8 +240,8 @@ export function verifySignature(
 //       without disrupting the frontend's separate Ed25519 telemetry keys.
 // ─────────────────────────────────────────────
 export function generateC2PAKeyPair(): C2PASigningKey {
-  const { privateKey, publicKey } = generateKeyPairSync("ec", {
-    namedCurve: "P-256",
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", {
+    modulusLength: 2048,
     publicKeyEncoding: { type: "spki", format: "pem" },
     privateKeyEncoding: { type: "pkcs8", format: "pem" },
   });

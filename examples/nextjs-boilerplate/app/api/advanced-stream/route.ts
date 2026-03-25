@@ -3,6 +3,7 @@ import { CMCDTelemetryHandler } from "../../../../../src/telemetry";
 import { loadOrCreateSigningKey } from "../../../../../src/signer";
 
 export async function GET(request: Request) {
+  const startTime = Date.now();
   const url = new URL(request.url);
   const sequence = parseInt(url.searchParams.get("seq") || "0", 10);
   const action = url.searchParams.get("action") || "normal";
@@ -16,6 +17,19 @@ export async function GET(request: Request) {
     signingKey: secureKey,
     verificationKeyPem: secureKey.publicKeyPem
   });
+
+  // --- Middleware Simulation ---
+  const overhead = 100 + Math.floor(Math.random() * 50); // Simulating 100-150ms of governance overhead
+  const latency = 50 + Math.floor(Math.random() * 50);   // Simulating 50-100ms of network latency
+  
+  // 1. Latency Simulation
+  await new Promise(resolve => setTimeout(resolve, latency));
+
+  // 2. CPU Overload Simulation (Busy loop)
+  const cpuStart = Date.now();
+  while (Date.now() - cpuStart < overhead) {
+    Math.sqrt(Math.random() * 1000000);
+  }
 
   // Base Compliance State
   const state = {
@@ -61,7 +75,8 @@ export async function GET(request: Request) {
       JSON.stringify({
         error: `HIK Governance Violation: Ethical Pulse blocked at the Edge. ${reason}`,
         state,
-        receivedHeaders: headersToTransmit
+        receivedHeaders: headersToTransmit,
+        metrics: { overhead, totalTime: Date.now() - startTime }
       }),
       { status: 403, headers: { "X-HIK-Status": "BLOCKED" } }
     );
@@ -74,6 +89,7 @@ export async function GET(request: Request) {
       : action === "ad_break" ? `Fragment ${sequence} unverified but gracefully slept by authorized 'hik-ab'.`
         : `Fragment ${sequence} securely delivered with active CMCD verification.`,
     receivedHeaders: headersToTransmit,
+    metrics: { overhead, totalTime: Date.now() - startTime },
     timestamp: new Date().toISOString()
   });
 }
