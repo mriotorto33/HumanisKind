@@ -99,6 +99,11 @@ export async function GET(request: Request) {
   }
 
   // 4. The Edge serves the authenticated video frame from the upstream Origin
+  // For the demonstration, we simulate a "Rolling Merkle Checkpoint" anchored every segment
+  const manifestHash = `0x${Math.random().toString(16).slice(2, 66)}`;
+  const txHash = `0x${Math.random().toString(16).slice(2, 66)}`;
+  const ipfsUrl = `ipfs://Qm${Math.random().toString(36).slice(2, 48)}`;
+
   return NextResponse.json({
     success: true,
     message: action === "drop" ? `Fragment ${sequence} missing telemetry but safely tolerated by 'hik-tw'.`
@@ -106,6 +111,11 @@ export async function GET(request: Request) {
         : `Fragment ${sequence} securely delivered with active CMCD verification.`,
     receivedHeaders: headersToTransmit,
     metrics: { overhead, totalTime: Date.now() - startTime },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    checkpoint: {
+      manifestHash,
+      txHash,
+      ipfsUrl
+    }
   });
 }

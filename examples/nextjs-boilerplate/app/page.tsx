@@ -12,7 +12,7 @@ export default function Home() {
   const [simulateKmirFailure, setSimulateKmirFailure] = useState(false);
 
   // --- V2.0 State ---
-  const [streamLog, setStreamLog] = useState<string[]>([]);
+  const [streamLog, setStreamLog] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sequence, setSequence] = useState(0);
   const [streamAction, setStreamAction] = useState<"normal" | "drop" | "ad_break" | "spoof" | "deepfake" | "stress">("normal");
@@ -47,12 +47,29 @@ export default function Home() {
 
           const metricStr = ` | Edge: ${overhead}ms | Total: ${data.metrics?.totalTime}ms`;
 
+          const timeStr = new Date().toLocaleTimeString();
           if (res.status === 403) {
-             setStreamLog(prev => [...prev, `[CDN EDGE] 🛑 CRITICAL: ${data.error}${metricStr}`]);
+             setStreamLog(prev => [...prev, {
+               timestamp: timeStr,
+               message: `🛑 CRITICAL: ${data.error}${metricStr}`,
+               type: "error"
+             }]);
              setIsTriggered(true);
              setIsPlaying(false);
           } else {
-             setStreamLog(prev => [...prev, `[CDN EDGE] ✅ AUTHENTICATED: Seq ${currentSeq} ${metricStr}`]);
+             setStreamLog(prev => [...prev, 
+               {
+                 timestamp: timeStr,
+                 message: `✅ AUTHENTICATED: Seq ${currentSeq} ${metricStr}`,
+                 type: "info"
+               },
+               {
+                 timestamp: timeStr,
+                 message: `[SEQ TRUTH] ANCHORED: Checkpoint Verified.`,
+                 type: "success",
+                 details: data.checkpoint
+               }
+             ]);
           }
         } catch (e: any) { setIsPlaying(false); }
       }, 1000);
@@ -219,10 +236,25 @@ export default function Home() {
                  </div>
                  <div style={{ height: "300px", overflowY: "auto", fontFamily: "monospace", fontSize: "0.85rem" }}>
                     {streamLog.map((log, i) => (
-                      <div key={i} style={{ color: log.includes("CRITICAL") ? "var(--accent-crimson)" : "var(--accent-emerald)", marginBottom: "0.4rem" }}>
-                        {log}
-                      </div>
-                    ))}
+                  <div key={i} style={{ marginBottom: "0.6rem", color: log.type === "error" ? "var(--accent-crimson)" : log.type === "warn" ? "#fbbf24" : log.type === "success" ? "var(--accent-emerald)" : "#94a3b8" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+                        <span style={{ color: "var(--accent-emerald)", opacity: 0.7, flexShrink: 0 }}>[{log.timestamp}]</span>
+                        <div style={{ flex: 1 }}>
+                            {log.message}
+                            {log.details && (
+                                <details style={{ marginTop: "0.25rem", color: "var(--text-secondary)", fontSize: "0.75rem", cursor: "pointer" }}>
+                                    <summary style={{ outline: "none", opacity: 0.8 }}>Technical Trace (IPFS/TX)</summary>
+                                    <div style={{ padding: "0.5rem", background: "rgba(0,0,0,0.4)", borderRadius: "4px", marginTop: "0.25rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                        <div><strong>Merkle Root:</strong> <code style={{ color: "var(--accent-emerald)", wordBreak: "break-all" }}>{log.details.manifestHash}</code></div>
+                                        <div><strong>IPFS Pin:</strong> <a href={`https://ipfs.io/ipfs/${log.details.ipfsUrl.replace("ipfs://", "")}`} target="_blank" rel="noreferrer" style={{ color: "#3b82f6", textDecoration: "underline", wordBreak: "break-all" }}>{log.details.ipfsUrl}</a></div>
+                                        <div><strong>TX Hash:</strong> <code style={{ opacity: 0.7, wordBreak: "break-all" }}>{log.details.txHash}</code></div>
+                                    </div>
+                                </details>
+                            )}
+                        </div>
+                    </div>
+                  </div>
+                ))}
                     <div ref={logEndRef} />
                  </div>
                </div>

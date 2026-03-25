@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       blockchain: {
         // Zero-config Vercel deployment: Auto-connect to Sepolia if built on Vercel without an explicit RPC
         rpcUrl: process.env.RPC_URL || (process.env.VERCEL === "1" ? "https://ethereum-sepolia-rpc.publicnode.com" : "http://127.0.0.1:8545"),
-        privateKey: process.env.PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+        privateKey: process.env.PRIVATE_KEY!,
         contractAddress: process.env.HIK_REGISTRY_ADDRESS || "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       },
       storage: {

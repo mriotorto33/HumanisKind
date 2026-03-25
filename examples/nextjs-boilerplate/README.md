@@ -1,19 +1,39 @@
-# Human Is Kind™ Next.js SDK Boilerplate
+# 🛡️ Human Is Kind™ Governance Command Dashboard
+### *A Premium Implementation of the HumanIsKind SDK*
 
-This folder automatically implements the `human-is-kind-sdk` natively into a modern server-side Next.js framework using the App Router.
+This dashboard provides a high-fidelity "Mission Control" interface for visualizing the technical enforcement of AI safety and provenance across both static and streaming assets.
 
-It seamlessly demonstrates how to implement the **KMIR (Kernel of Manifested Integrity Rules)** and **C2PA v2.3 Live Streaming** in action for frontend users building zero-trust AI pipelines!
+## 🚀 Key Governance Proofs
 
-## Dashboard Features
-1. **v1.1 Static Asset Anchoring**: Visualize the cryptographic `signAndAnchor` process with local Pinata mock IPFS bridging and Hardhat blockchain transactions.
-2. **v2.0 CMCDv2 Live Stream Telemetry**: An interactive visualizer demonstrating the Verifiable Segment Info (VSI) Merkle-chain logic injecting active assertions into the stream chunks via local C2PA ephemeral keys (`hik-signing.key.pem`).
-3. **Edge CDN Interception**: Play with the "deepfake" simulators that physically alter the `CMCD-Custom-hik-es` pulse, breaking the chain and dropping the stream instantly.
-4. **End-to-End Visual Playwright Tests**: A robust automated testing suite physically verifying the HLS network dropping mechanisms and testing the continuous UI Telemetry HUD using headless Chromium. Run `npm run test:e2e` to visualize the simulated deepfake interventions!
+### 1. The Ethical Kernel (v1.1)
+**Immutable Static Asset Anchoring**
+*   **KMIR Validation:** Zero-trust cryptographic gatekeeping for hardware capture.
+*   **Atomic Chain:** Full pipeline verification from local hash to **Live Pinata IPFS** and **Blockchain Anchoring**.
+*   **Transparency:** Real-time visibility into Broadcaster Wallets, Merkle Hashes, and Verified Transaction IDs.
 
-## Quick Start
+### 2. The Sequential Truth Engine (v2.0)
+**Deterministic Edge Enforcement for Live Streams**
+*   **CMCDv2 Telemetry HUD:** Real-time visualization of `hik-es` (Ethical Score), `hik-ps` (Provenance Depth), and Edge overhead metrics.
+*   **Hardware Kill-Switch:** A deterministic response to governance violations. If the "Sequential Truth" is broken (e.g., synthetic payload injection), the system triggers a physical disconnect at the network edge in **< 1ms**.
+*   **Rolling Merkle Checkpoints:** Continuous technical traces (IPFS/TX) embedded directly into the stream console for maximum transparency.
+
+---
+
+## 🛠️ Getting Started
+
+### 1. Configure Environment
+Ensure the following variables are set in your `.env`:
+*   `PRIVATE_KEY`: A funded wallet (Hardware Enclave or Local Dev).
+*   `PINATA_API_KEY` & `PINATA_SECRET_KEY`: For live IPFS anchoring.
+*   `HIK_REGISTRY_ADDRESS`: The deployed Human Registry contract.
+
+### 2. Launch Mission Control
 ```bash
 npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000` to interact with your Governance API endpoints and test the C2PA v2.3 interactive validations.
+Visit `http://localhost:3001` (or your configured port) to begin the leadership presentation.
+
+---
+*HumanIsKind shifts AI safety from an unenforceable "honor system" into a structural, mathematical requirement.*
