@@ -6,6 +6,16 @@
 **Human Is Kind (HIK)** is an 'Integrity as a Service' (IaaS) foundational middleware. We shift AI safety from an unenforceable abstract "honor system" into a structural, mathematical requirement. The SDK provides immutable, blockchain-anchored cryptographic provenance for C2PA manifests, static digital assets, and hyper-scale live video streams.
 
 ---
+## 🛡️ Origin & Independence Statement (Safe Harbor)
+
+**Architecture & Code Provenance**
+
+The HumanisKind (HIK) SDK is an independent, clean-room architecture designed for deterministic AI governance. This entire codebase was architected and generated from the ground up utilizing advanced agentic AI (Antigravity). 
+
+HIK does not contain, derive from, or rely upon any proprietary code, trade secrets, or confidential intellectual property from any third-party organizations or prior commercial engagements. 
+
+This project is built strictly on top of public, open-source specifications, primarily implementing and expanding upon the **C2PA (Coalition for Content Provenance and Authenticity)** standard, **COSE** cryptographic primitives, and **CMCD** telemetry. HIK introduces a novel, independent middleware layer focused exclusively on real-time hardware-software interdiction and immutable blockchain anchoring.
+
 
 ## 🏛️ Core Architectures
 
