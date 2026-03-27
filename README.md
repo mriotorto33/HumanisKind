@@ -225,37 +225,37 @@ After signing and anchoring, you receive:
 | `ipfsUrl`   | IPFS URI (e.g. `ipfs://Qm...`)       |
 | `txHash`    | Blockchain transaction hash          |
 
+## ⚖️ License & IP Agreement: Evaluation Only (Commercial FSL Available)
 
-# HumanisKind (HIK) SDK License Agreement (Version 1.0)
+**Copyright (c) 2026 Martín Riotorto & Matías Mospan.**
 
-**Copyright (c) 2026 Martín Riotorto & Federico Brubacher.**
+This public repository is provided as **"Visible Source"** exclusively for transparency, academic research, and security auditing. We believe in the "Fair Source" paradigm: the enterprise market requires absolute code visibility to verify deterministic compliance, but the foundational creators require protection against unauthorized commercial exploitation.
 
-## 1. Overview
-This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
+### 1. Public Repo Rights (Non-Commercial & Evaluation)
+By accessing this public repository, you are granted a limited right to view, download, and test this Software locally strictly for:
+* Independent security and compliance auditing.
+* Academic research.
+* Local, non-production integration testing.
 
-## 2. Permitted Use (Non-Commercial)
-You are permitted to view, download, and use The Software for:
-* Personal, non-commercial projects.
-* Academic research and educational purposes.
-* Evaluation and integration testing (up to 30 days).
+### 2. Commercial & Production Use (Requires FSL License)
+**Using this Software for internal business operations, commercial services, or deploying it into any production environment (e.g., live HR workflows, public APIs) is STRICTLY PROHIBITED without a valid Commercial License.**
 
-## 3. Commercial Use (Requires License)
-Commercial use of The Software is strictly prohibited without a valid, paid subscription. This includes, but is not limited to:
-* Integrating the SDK into a for-profit application or middleware.
-* Using the SDK for internal business e-governance or provenance tracking.
-* Providing paid services based on the HIK Registry.
+Organizations requiring production deployment to satisfy regulatory frameworks (such as the EU AI Act or NYC LL144) must acquire the **Functional Source License (FSL-1.1-ALv2)** through a formal agreement with the HumanisKind lead architects.
 
-**To obtain a Commercial License, please subscribe to a plan at: https://www.humaniskind.com**
-
-## 4. Restrictions
-* **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
-* **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Luiza) to maintain the integrity of the Human Provenance standard.
-
-## This repository is Source Visible for integrity auditing purposes only. The recursive fragment-chaining logic (Root_n) and the Atomic Fail-Close mechanism are proprietary innovations of HumanisKind. Cloning for the purpose of reverse-engineering or derivative work without a license is strictly prohibited
-
-## 5. Termination
-Failure to comply with the terms of this license or failure to maintain a paid subscription for commercial use will result in the immediate termination of your right to use The Software.
+### 3. The Enterprise FSL Advantage
+When an organization executes a commercial agreement and acquires the FSL-1.1-ALv2 license, they unlock:
+* **Unlimited Internal Production Use:** Full legal rights to deploy the deterministic governance engine within their own infrastructure (e.g., GCP Kubernetes sidecars).
+* **Delayed Open Source Publication (DOSP):** To mathematically eliminate vendor lock-in, the specific version of the code licensed to the enterprise will automatically and irrevocably convert to the permissive **Apache License Version 2.0** exactly 24 months after the agreement.
 
 ---
 
-*“Ensuring AI remains human-centric through transparent, ethical middleware.”*
+### 💼 Enterprise Integrations & Partnerships
+For organizations requiring deep infrastructural integration (e.g., GCP Kubernetes sidecar orchestration, Go runtime migrations, and SLA-backed support), the HIK team offers dedicated Non-Recurring Engineering (NRE) engagements. 
+
+Please reach out directly to the Lead Architects to discuss Enterprise deployment requirements, NRE engagements, and the activation of the FSL commercial license.
+
+---
+
+### 🙏 Acknowledgments & Special Thanks
+Special thanks to **Federico Brubacher** for his invaluable contribution as an external Strategic Advisor. His independent validation of the HIK architecture against global scalability and Big Tech standards—particularly his rigorous testing of the hardware enclaves—has been instrumental in ensuring the enterprise-grade readiness of this protocol.
+
