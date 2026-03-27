@@ -153,7 +153,7 @@ npx hardhat run scripts/demo.ts --network polygon
 
 # HumanisKind (HIK) SDK License Agreement (Version 1.0)
 
-**Copyright (c) 2026 Martín Riotorto &  Federico Brubacher.**
+**Copyright (c) 2026 Martín Riotorto & Matías Mospan & Federico Brubacher.**
 
 ## 1. Overview
 This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
@@ -174,7 +174,7 @@ Commercial use of The Software is strictly prohibited without a valid, paid subs
 
 ## 4. Restrictions
 * **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
-* **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Luiza) to maintain the integrity of the Human Provenance standard.
+* **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Federico Bfubacher & Matías Mospan) to maintain the integrity of the Human Provenance standard.
 
 
 ## This repository is Source Visible for integrity auditing purposes only. The recursive fragment-chaining logic (Root_n) and the Atomic Fail-Close mechanism are proprietary innovations of HumanisKind. Cloning for the purpose of reverse-engineering or derivative work without a license is strictly prohibited
