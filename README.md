@@ -177,11 +177,3 @@ Please reach out directly to the Lead Architects to discuss Enterprise deploymen
 
 ### 🙏 Acknowledgments & Special Thanks
 Special thanks to **Federico Brubacher** for his invaluable contribution as an external Strategic Advisor. His independent validation of the HIK architecture against global scalability and Big Tech standards—particularly his rigorous testing of the hardware enclaves—has been instrumental in ensuring the enterprise-grade readiness of this protocol.
-
-## 4. Restrictions
-* **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
-* **No Unofficial Contributors:** Contributions to the official repository are restricted to authorized personnel (Martín Riotorto & Federico Bfubacher & Matías Mospan) to maintain the integrity of the Human Provenance standard.
-
-
-## This repository is Source Visible for integrity auditing purposes only. The recursive fragment-chaining logic (Root_n) and the Atomic Fail-Close mechanism are proprietary innovations of HumanisKind. Cloning for the purpose of reverse-engineering or derivative work without a license is strictly prohibited
-
