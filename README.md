@@ -150,30 +150,37 @@ npx hardhat run scripts/demo.ts --network polygon
 ```
 
 ---
-
-## ⚖️ License Agreement: Functional Source License (FSL-1.1-ALv2)
+## ⚖️ License & IP Agreement: Evaluation Only (Commercial FSL Available)
 
 **Copyright (c) 2026 Martín Riotorto & Matías Mospan.**
 
-This repository is licensed under the **Functional Source License (FSL-1.1-ALv2)**. We believe in the "Fair Source" paradigm: Enterprise compliance requires absolute code visibility for independent auditing (e.g., EU AI Act, NYC LL144), but the foundational creators require protection against harmful free-riding.
+This public repository is provided as **"Visible Source"** exclusively for transparency, academic research, and security auditing. We believe in the "Fair Source" paradigm: the enterprise market requires absolute code visibility to verify deterministic compliance, but the foundational creators require protection against unauthorized commercial exploitation.
 
-### 1. What You CAN Do (Internal & Production Use)
-You are granted the right to view, download, modify, and deploy this Software for your internal business operations and production environments. This ensures your engineering and compliance teams have 100% visibility into the deterministic governance algorithms (Atomic Chain, Kill-Switch, Sacred Trace) without ever relying on a "black box."
+### 1. Public Repo Rights (Non-Commercial & Evaluation)
+By accessing this public repository, you are granted a limited right to view, download, and test this Software locally strictly for:
+* Independent security and compliance auditing.
+* Academic research.
+* Local, non-production integration testing.
 
-### 2. What You CANNOT Do (Competing Use)
-You may not use the Software to provide a "Competing Use." A Competing Use means making the Software available to third parties as a standalone commercial product or service that substitutes for the original Software (e.g., offering HIK's deterministic governance engine as a generic SaaS compliance API to other companies).
+### 2. Commercial & Production Use (Requires FSL License)
+**Using this Software for internal business operations, commercial services, or deploying it into any production environment (e.g., live HR workflows, public APIs) is STRICTLY PROHIBITED without a valid Commercial License.**
 
-### 3. Delayed Open Source Publication (DOSP)
-To eliminate the risk of perpetual vendor lock-in, **exactly 24 months** after the publication of any specific version or commit of this Software, that specific version will automatically and irrevocably convert to the permissive **Apache License Version 2.0**.
+Organizations requiring production deployment to satisfy regulatory frameworks (such as the EU AI Act or NYC LL144) must acquire the **Functional Source License (FSL-1.1-ALv2)** through a formal agreement with the HumanisKind lead architects.
+
+### 3. The Enterprise FSL Advantage
+When an organization executes a commercial agreement and acquires the FSL-1.1-ALv2 license, they unlock:
+* **Unlimited Internal Production Use:** Full legal rights to deploy the deterministic governance engine within their own infrastructure (e.g., GCP Kubernetes sidecars).
+* **Delayed Open Source Publication (DOSP):** To mathematically eliminate vendor lock-in, the specific version of the code licensed to the enterprise will automatically and irrevocably convert to the permissive **Apache License Version 2.0** exactly 24 months after the agreement.
 
 ---
 
 ### 💼 Enterprise Integrations & Partnerships
 For organizations requiring deep infrastructural integration (e.g., GCP Kubernetes sidecar orchestration, Go runtime migrations, and SLA-backed support), the HIK team offers dedicated Non-Recurring Engineering (NRE) engagements. 
 
-Please reach out directly to the Lead Architects to discuss Enterprise deployment requirements and IP access agreements.
+Please reach out directly to the Lead Architects to discuss Enterprise deployment requirements, NRE engagements, and the activation of the FSL commercial license.
 
 ---
 
 ### 🙏 Acknowledgments & Special Thanks
 Special thanks to **Federico Brubacher** for his invaluable contribution as an external Strategic Advisor. His independent validation of the HIK architecture against global scalability and Big Tech standards—particularly his rigorous testing of the hardware enclaves—has been instrumental in ensuring the enterprise-grade readiness of this protocol.
+
