@@ -151,26 +151,32 @@ npx hardhat run scripts/demo.ts --network polygon
 
 ---
 
-# HumanisKind (HIK) SDK License Agreement (Version 1.0)
+## ⚖️ License Agreement: Functional Source License (FSL-1.1-ALv2)
 
-**Copyright (c) 2026 Martín Riotorto & Matías Mospan & Federico Brubacher.**
+**Copyright (c) 2026 Martín Riotorto & Matías Mospan.**
 
-## 1. Overview
-This license governs the use of the HumanisKind (HIK) SDK ("The Software"). The Software is provided as "Visible Source" for the purpose of transparency in human provenance and AI ethics auditing.
+This repository is licensed under the **Functional Source License (FSL-1.1-ALv2)**. We believe in the "Fair Source" paradigm: Enterprise compliance requires absolute code visibility for independent auditing (e.g., EU AI Act, NYC LL144), but the foundational creators require protection against harmful free-riding.
 
-## 2. Permitted Use (Non-Commercial)
-You are permitted to view, download, and use The Software for:
-* Personal, non-commercial projects.
-* Academic research and educational purposes.
-* Evaluation and integration testing (up to 30 days).
+### 1. What You CAN Do (Internal & Production Use)
+You are granted the right to view, download, modify, and deploy this Software for your internal business operations and production environments. This ensures your engineering and compliance teams have 100% visibility into the deterministic governance algorithms (Atomic Chain, Kill-Switch, Sacred Trace) without ever relying on a "black box."
 
-## 3. Commercial Use (Requires License)
-Commercial use of The Software is strictly prohibited without a valid, paid subscription. This includes, but is not limited to:
-* Integrating the SDK into a for-profit application or middleware.
-* Using the SDK for internal business e-governance or provenance tracking.
-* Providing paid services based on the HIK Registry.
+### 2. What You CANNOT Do (Competing Use)
+You may not use the Software to provide a "Competing Use." A Competing Use means making the Software available to third parties as a standalone commercial product or service that substitutes for the original Software (e.g., offering HIK's deterministic governance engine as a generic SaaS compliance API to other companies).
 
-**To obtain a Commercial License, please subscribe to a plan at: https://www.humaniskind.com**
+### 3. Delayed Open Source Publication (DOSP)
+To eliminate the risk of perpetual vendor lock-in, **exactly 24 months** after the publication of any specific version or commit of this Software, that specific version will automatically and irrevocably convert to the permissive **Apache License Version 2.0**.
+
+---
+
+### 💼 Enterprise Integrations & Partnerships
+For organizations requiring deep infrastructural integration (e.g., GCP Kubernetes sidecar orchestration, Go runtime migrations, and SLA-backed support), the HIK team offers dedicated Non-Recurring Engineering (NRE) engagements. 
+
+Please reach out directly to the Lead Architects to discuss Enterprise deployment requirements and IP access agreements.
+
+---
+
+### 🙏 Acknowledgments & Special Thanks
+Special thanks to **Federico Brubacher** for his invaluable contribution as an external Strategic Advisor. His independent validation of the HIK architecture against global scalability and Big Tech standards—particularly his rigorous testing of the hardware enclaves—has been instrumental in ensuring the enterprise-grade readiness of this protocol.
 
 ## 4. Restrictions
 * **No Redistribution:** You may not redistribute the source code or derivatives under a different license (e.g., MIT, GPL).
@@ -178,7 +184,4 @@ Commercial use of The Software is strictly prohibited without a valid, paid subs
 
 
 ## This repository is Source Visible for integrity auditing purposes only. The recursive fragment-chaining logic (Root_n) and the Atomic Fail-Close mechanism are proprietary innovations of HumanisKind. Cloning for the purpose of reverse-engineering or derivative work without a license is strictly prohibited
-
-## 5. Termination
-Failure to comply with the terms of this license or failure to maintain a paid subscription for commercial use will result in the immediate termination of your right to use The Software.
 
